@@ -85,30 +85,40 @@ let data = [], filters = {companion: null};
 // AUTOMATISCHER LADESTART
 window.onload = async () => {
     const params = new URLSearchParams(window.location.search);
-    filters.companion = params.get('name');
+    const companionParam = params.get('name');
+    if(companionParam) filters.companion = decodeURIComponent(companionParam);
 
     try {
-        // Lädt die daten.json Datei aus demselben Verzeichnis auf GitHub
-        const response = await fetch('daten.json');
+        // Cache-Buster hinzugefügt (?v=...), damit Änderungen sofort sichtbar sind
+        const response = await fetch('daten.json?v=' + Date.now());
+        
+        if (!response.ok) {
+            throw new Error("Datei daten.json wurde auf dem Server nicht gefunden.");
+        }
+
         const rawData = await response.json();
         
         data = rawData.map(r => ({
-            fullDate: parseD(r["Datum"], r["Uhrzeit"]),
-            datum: r["Datum"],
-            gegner: (r["Gegner"] || "Unbekannt").trim(),
-            meinVerein: (r["Mein Verein"] || "Holstein Kiel").trim(),
-            ort: r["Ort"] || "H",
-            tK: r["Tore Kiel"],
-            tG: r["Tore Gegner"],
-            played: !isNaN(parseInt(r["Tore Kiel"])),
-            begleiter: r["Begleiter"] || ""
+            fullDate: parseD(r["Datum"] || r["datum"], r["Uhrzeit"] || r["uhrzeit"]),
+            datum: r["Datum"] || r["datum"],
+            gegner: (r["Gegner"] || r["gegner"] || "Unbekannt").trim(),
+            meinVerein: (r["Mein Verein"] || r["mein verein"] || "Holstein Kiel").trim(),
+            ort: (r["Ort"] || r["ort"] || "H").toUpperCase(),
+            tK: r["Tore Kiel"] || r["tore kiel"] || 0,
+            tG: r["Tore Gegner"] || r["tore gegner"] || 0,
+            played: (r["Tore Kiel"] !== undefined),
+            begleiter: r["Begleiter"] || r["begleiter"] || ""
         }));
 
-        document.getElementById("statusInfo").innerText = "Daten live von GitHub geladen";
+        document.getElementById("statusInfo").innerText = filters.companion ? 
+            "Profil von " + filters.companion + " geladen" : 
+            "Cloud-Daten erfolgreich geladen";
         render();
     } catch (err) {
-        document.getElementById("statusInfo").innerText = "Fehler: daten.json nicht gefunden!";
-        console.error(err);
+        document.getElementById("statusInfo").innerHTML = 
+            "<b style='color:var(--red)'>FEHLER: daten.json fehlt oder ist fehlerhaft!</b><br>" +
+            "<span style='font-size:10px'>Stelle sicher, dass die Datei im GitHub-Ordner liegt.</span>";
+        console.error("JSON Fehler:", err);
     }
 };
 
