@@ -15,7 +15,6 @@
   body{ margin:0; padding:10px; background: var(--bg); color:var(--text); line-height: 1.5; }
   .container { max-width: 1650px; margin: 0 auto; display: none; } 
 
-  /* Mobile Optimierung */
   @media (max-width: 600px) {
     .header { padding: 15px !important; flex-direction: column; gap: 15px; text-align: center; }
     .ticker-val { font-size: 1.8rem !important; }
@@ -26,15 +25,11 @@
     .score-box { width: 60px !important; font-size: 1rem !important; }
   }
 
-  /* Login Overlay */
   #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
   .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 350px; }
   input[type="password"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 20px; text-align: center; font-size: 1rem; outline: none; }
-  
   .btn-action { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
-  .btn-action:active { transform: scale(0.98); }
 
-  /* UI Elemente */
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
   .generator-section { background: rgba(96, 165, 250, 0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--blue); margin-bottom: 20px; }
   .badge-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
@@ -51,7 +46,6 @@
 
   .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
   @media (min-width: 1200px) { .main-grid { grid-template-columns: 1.8fr 1.2fr; } }
-  
   .table-container { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid var(--border); overflow-x: auto; }
   .match-table { width:100%; border-collapse:collapse; min-width: 500px; }
   .match-table th { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; padding: 10px; border-bottom: 1px solid var(--border); }
@@ -75,7 +69,7 @@
         <h2 style="margin:0 0 20px 0;">KSV Login</h2>
         <input type="password" id="passInput" placeholder="Passwort...">
         <button class="btn-action" onclick="checkLogin()">EINLOGGEN</button>
-        <p id="loginError" style="color:var(--red); font-size:0.8rem; margin-top:15px; display:none;">Falsches Passwort!</p>
+        <p id="loginError" style="color:var(--red); font-size:0.8rem; margin-top:15px; display:none;">Falsch!</p>
     </div>
 </div>
 
@@ -89,12 +83,12 @@
   </div>
 
   <div class="generator-section" id="adminTools">
-    <div style="font-size: 0.7rem; color: #60a5fa; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">Link Generator</div>
+    <div style="font-size: 0.7rem; color: #60a5fa; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">Begleiter-Link kopieren</div>
     <div style="display:flex; gap:10px;">
         <select id="companionSelect" style="margin-bottom:0; flex:1;"></select>
-        <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
+        <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK</button>
     </div>
-    <div id="copyConfirm" style="font-size: 0.7rem; margin-top:5px; color:var(--win); display:none;">Link kopiert! ✅</div>
+    <div id="copyConfirm" style="font-size: 0.7rem; margin-top:5px; color:var(--win); display:none;">Kopiert! ✅</div>
   </div>
 
   <div class="badge-row" id="badgeRow">
@@ -105,7 +99,7 @@
 
   <div class="ticker-card">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div style="color:var(--text-dim); font-size: 0.7rem; margin-top: 5px; text-transform: uppercase;">Abwesenheits-Dauer</div>
+    <div id="tickerDesc" style="color:var(--text-dim); font-size: 0.7rem; margin-top: 5px; text-transform: uppercase;">Deine Abwesenheit vom Stadion</div>
   </div>
 
   <div class="stats-bar">
@@ -124,7 +118,7 @@
       </table>
     </div>
     <div class="table-container" id="companionSection">
-        <h3 style="margin-top:0; font-size: 1rem;">👤 BEGLEITER-RANKING</h3>
+        <h3 style="margin-top:0; font-size: 1rem;">👤 BEGLEITER</h3>
         <table id="companionTable" style="width:100%; border-collapse:collapse;">
           <thead><tr style="color:var(--text-dim); font-size: 0.6rem; text-align:center;"><th>NAME</th><th>BESUCHE</th><th>LÜCKE</th></tr></thead>
           <tbody></tbody>
@@ -134,18 +128,13 @@
 </div>
 
 <script>
-/** ADMIN PASSWORT HIER ÄNDERN **/
 const ADMIN_PASSWORD = "KSV"; 
-
 let data = [], filters = {companion: null}, tickerInterval = null;
 
 window.onload = async () => {
     const params = new URLSearchParams(window.location.search);
     const user = params.get('user');
-    if(user) { 
-        filters.companion = decodeURIComponent(user); 
-        showApp(false); 
-    }
+    if(user) { filters.companion = decodeURIComponent(user); showApp(false); }
 };
 
 function checkLogin() {
@@ -159,9 +148,11 @@ async function showApp(isAdmin) {
     if(!isAdmin) {
         document.getElementById("adminTools").style.display = "none";
         document.getElementById("companionSection").style.display = "none";
-        document.getElementById("statusInfo").innerText = "Profil: " + filters.companion;
+        document.getElementById("statusInfo").innerText = "Profil von " + filters.companion;
+        document.getElementById("tickerDesc").innerText = "Abwesenheit seit deinem letzten Besuch";
     } else {
-        document.getElementById("statusInfo").innerText = "Admin-Kontrollzentrum";
+        document.getElementById("statusInfo").innerText = "Admin-Modus";
+        document.getElementById("tickerDesc").innerText = "Laufender Abwesenheits-Abgrund (Admin)";
     }
     await loadData();
 }
@@ -171,45 +162,32 @@ async function loadData() {
         const res = await fetch('daten.json?v=' + Date.now());
         const json = await res.json();
         data = json.map(r => {
-            const dStr = r["Datum"] || r["datum"] || "";
-            const tStr = r["Uhrzeit"] || r["uhrzeit"] || "15:30";
+            const d = r["Datum"] || r["datum"] || "";
+            const t = r["Uhrzeit"] || r["uhrzeit"] || "15:30";
             return {
-                fD: parseAnyDate(dStr, tStr),
-                datum: dStr, 
+                fD: parseAnyDate(d, t),
+                datum: d, 
                 gegner: (r["Gegner"] || "Unbekannt").trim(),
                 meinVerein: (r["Mein Verein"] || "Holstein Kiel").trim(),
                 ort: (r["Ort"] || "H").toUpperCase(),
-                tK: r["Tore Kiel"] || 0, 
-                tG: r["Tore Gegner"] || 0,
+                tK: r["Tore Kiel"] || 0, tG: r["Tore Gegner"] || 0,
                 played: r["Tore Kiel"] !== undefined && r["Tore Kiel"] !== "" && r["Tore Kiel"] !== "-:-",
                 begleiter: r["Begleiter"] || ""
             };
         });
         render();
-    } catch (e) { 
-        document.getElementById("statusInfo").innerText = "Fehler: daten.json fehlt oder kaputt!"; 
-    }
+    } catch (e) { document.getElementById("statusInfo").innerText = "JSON-Fehler!"; }
 }
 
 function parseAnyDate(dStr, tStr) {
     if (!dStr) return new Date();
-    let cleanD = dStr.replace(/^[a-zA-Z]{2,3},\s/, '').trim();
+    let clean = dStr.replace(/^[a-zA-Z]{2,3},\s/, '').trim();
     let dateObj;
-    if (cleanD.includes('.')) {
-        const p = cleanD.split('.');
-        dateObj = new Date(p[2], p[1] - 1, p[0]);
-    } else if (cleanD.includes('/')) {
-        const p = cleanD.split('/');
-        dateObj = new Date(cleanD);
-        if (isNaN(dateObj)) dateObj = new Date(p[2], p[0]-1, p[1]);
-    } else {
-        dateObj = new Date(cleanD);
-    }
+    if (clean.includes('.')) { const p = clean.split('.'); dateObj = new Date(p[2], p[1] - 1, p[0]); }
+    else if (clean.includes('/')) { dateObj = new Date(clean); if (isNaN(dateObj)) { const p = clean.split('/'); dateObj = new Date(p[2], p[0]-1, p[1]); } }
+    else { dateObj = new Date(clean); }
     if (isNaN(dateObj.getTime())) return new Date();
-    if (tStr && tStr.includes(':')) {
-        const tp = tStr.split(':');
-        dateObj.setHours(parseInt(tp[0]), parseInt(tp[1]), 0, 0);
-    }
+    if (tStr && tStr.includes(':')) { const tp = tStr.split(':'); dateObj.setHours(parseInt(tp[0]), parseInt(tp[1]), 0, 0); }
     return dateObj;
 }
 
@@ -220,11 +198,10 @@ function render() {
         played.filter(m => m.begleiter.trim() !== "" && m.begleiter.toLowerCase() !== "nicht im stadion");
 
     if (relevant.length < 1) {
-        document.getElementById("liveTicker").innerText = "Keine Besuche geloggt";
+        document.getElementById("liveTicker").innerText = "Keine Daten";
         return;
     }
 
-    // Stats Logik
     const firstVisit = relevant[0].fD;
     const lastVisit = relevant[relevant.length-1].fD;
     const now = new Date();
@@ -241,7 +218,6 @@ function render() {
     }
     document.getElementById("statFreq").innerText = (Math.floor((now - firstVisit)/86400000) / relevant.length).toFixed(0) + " T.";
 
-    // Ticker Start
     if(tickerInterval) clearInterval(tickerInterval);
     tickerInterval = setInterval(() => {
         const diff = new Date() - lastVisit;
@@ -249,13 +225,11 @@ function render() {
         document.getElementById("liveTicker").innerText = `${d}t ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
     }, 1000);
 
-    // Badges Update
     [10, 25, 50, 100, 250, 500].forEach(n => {
-        const badge = document.getElementById(`m-${n}`);
-        if(badge) badge.className = relevant.length >= n ? "badge-img active-badge" : "badge-img";
+        const b = document.getElementById(`m-${n}`);
+        if(b) b.className = relevant.length >= n ? "badge-img active-badge" : "badge-img";
     });
 
-    // Tabelle Spielplan
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.sort((a,b) => b.fD - a.fD).map(m => {
         const active = m.begleiter.includes(filters.companion || "");
@@ -272,7 +246,6 @@ function render() {
         </tr>`;
     }).join("");
 
-    // Admin Tools befüllen
     if(!filters.companion) {
         const comps = {};
         played.forEach(m => {
@@ -286,7 +259,7 @@ function render() {
                 comps[name].sp++; comps[name].last = m.fD;
             });
         });
-        document.getElementById("companionSelect").innerHTML = '<option value="">Begleiter wählen...</option>' + Object.keys(comps).sort().map(n => `<option value="${n}">${n}</option>`).join("");
+        document.getElementById("companionSelect").innerHTML = '<option value="">Name...</option>' + Object.keys(comps).sort().map(n => `<option value="${n}">${n}</option>`).join("");
         document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps).sort((a,b)=>b[1].sp - a[1].sp).map(([n, s]) => `
             <tr onclick="window.location.href='?user=${encodeURIComponent(n)}'">
                 <td style="padding:10px; font-weight:bold; text-align:left;">${n}</td><td>${s.sp}x</td><td style="color:var(--red)">${s.maxG} T.</td>
@@ -300,7 +273,7 @@ function copyLink() {
     const url = window.location.href.split('?')[0] + "?user=" + encodeURIComponent(name);
     navigator.clipboard.writeText(url).then(() => {
         document.getElementById("copyConfirm").style.display = "block";
-        setTimeout(() => document.getElementById("copyConfirm").style.display = "none", 3000);
+        setTimeout(() => document.getElementById("copyConfirm").style.display = "none", 2000);
     });
 }
 function logout() { window.location.href = window.location.pathname; }
