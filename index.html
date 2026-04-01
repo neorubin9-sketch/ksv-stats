@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>KSV – Dashboard Precision Fixed</title>
+<title>KSV – Dashboard Precision</title>
 <style>
   :root{ 
     --blue:#003f8c; --red:#e30613; --bg:#0f172a; --card:#1e293b; 
@@ -179,18 +179,12 @@ async function loadData() {
     } catch (e) { document.getElementById("statusInfo").innerText = "Fehler beim Laden!"; }
 }
 
-// FIX: Robuste Datumsverarbeitung für Schrägstriche und Punkte
 function parseAnyDate(dStr, tStr) {
     if (!dStr) return new Date();
-    // Entfernt Wochentage wie "Sat, "
     let clean = dStr.replace(/^[a-zA-Z]{2,3},\s/, '').trim();
-    
-    // Trennung unabhängig von . oder /
     const parts = clean.split(/[./]/);
     let dateObj;
-
     if (parts.length === 3) {
-        // Wir erzwingen Tag, Monat, Jahr (DD.MM.YYYY)
         const day = parseInt(parts[0]);
         const month = parseInt(parts[1]) - 1;
         const year = parseInt(parts[2]);
@@ -198,9 +192,7 @@ function parseAnyDate(dStr, tStr) {
     } else {
         dateObj = new Date(clean);
     }
-
     if (isNaN(dateObj.getTime())) return new Date();
-    
     if (tStr && tStr.includes(':')) {
         const tp = tStr.split(':');
         dateObj.setHours(parseInt(tp[0]), parseInt(tp[1]), 0, 0);
@@ -212,15 +204,16 @@ function parseAnyDate(dStr, tStr) {
 
 function render() {
     const now = new Date();
-    // Sortierung nach Datum (Neueste zuerst) - Jetzt mit fixem Datumsparser
     data.sort((a,b) => b.fD - a.fD);
     
-    const playedPast = data.filter(d => d.played && d.fD <= now).sort((a,b) => a.fD - b.fD);
+    // Stats-Logik: Nur Spiele, die wirklich stattgefunden haben
+    const playedPast = data.filter(d => d.played && d.fD <= now);
     const relevant = filters.companion ? 
         playedPast.filter(m => m.begleiter.includes(filters.companion)) : 
         playedPast.filter(m => m.begleiter.trim() !== "" && m.begleiter.toLowerCase() !== "nicht im stadion" && m.begleiter.toLowerCase() !== "keine zuschauer");
 
     if (relevant.length > 0) {
+        relevant.sort((a,b) => a.fD - b.fD); // Für Berechnung der Lücken aufsteigend
         const firstVisit = relevant[0].fD;
         const lastVisit = relevant[relevant.length-1].fD;
         
@@ -250,12 +243,15 @@ function render() {
         });
     }
 
+    // Tabelle Spielplan
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
         const isFuture = m.fD > now;
         const isDabei = m.begleiter.includes(filters.companion || "");
         
-        // Filter-Logik für Begleiter-Profil
+        // STRIKTER FILTER:
+        // Im Begleiter-Modus: Zeige nur Spiele, wo er dabei war ODER alle zukünftigen Spiele.
+        // Vergangene Spiele ohne diesen Begleiter werden komplett ignoriert.
         if(filters.companion && !isDabei && !isFuture) return "";
         
         const isH = m.ort === "H";
@@ -274,9 +270,9 @@ function render() {
 
     if(!filters.companion) {
         const comps = {};
-        playedPast.forEach(m => {
+        playedPast.filter(m => m.begleiter.trim() !== "" && m.begleiter.toLowerCase() !== "nicht im stadion" && m.begleiter.toLowerCase() !== "keine zuschauer").forEach(m => {
             m.begleiter.split(/,| und /).forEach(n => {
-                const name = n.trim(); if(!name || name.toLowerCase() === "nicht im stadion" || name.toLowerCase() === "keine zuschauer") return;
+                const name = n.trim(); if(!name) return;
                 if(!comps[name]) comps[name] = {sp: 0, last: null, maxG: 0};
                 if(comps[name].last) {
                     const g = Math.floor((m.fD - comps[name].last)/86400000);
