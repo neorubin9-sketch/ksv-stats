@@ -32,7 +32,7 @@
   input[type="password"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 20px; text-align: center; font-size: 1rem; outline: none; }
   .btn-action { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
 
-  /* Header & UI */
+  /* UI Header */
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
   .generator-section { background: rgba(96, 165, 250, 0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--blue); margin-bottom: 20px; }
   .badge-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
@@ -82,13 +82,13 @@
   <div class="header">
     <div id="statusHeader">
         <h2 style="margin:0; font-size: 1.4rem;">KSV <span style="color:var(--red)">LOG MASTER</span></h2>
-        <div id="statusInfo" style="color:var(--text-dim); font-size: 0.75rem;">Daten laden...</div>
+        <div id="statusInfo" style="color:var(--text-dim); font-size: 0.75rem;">Daten werden geladen...</div>
     </div>
     <button class="btn-action" style="width:auto; padding: 8px 20px; background:var(--red)" onclick="logout()">LOGOUT</button>
   </div>
 
   <div class="generator-section" id="adminTools">
-    <div style="font-size: 0.7rem; color: #60a5fa; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">Link Generator</div>
+    <div style="font-size: 0.7rem; color: #60a5fa; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">Begleiter-Link Generator</div>
     <div style="display:flex; gap:10px;">
         <select id="companionSelect" style="margin-bottom:0; flex:1;"></select>
         <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
@@ -153,9 +153,9 @@ async function showApp(isAdmin) {
     if(!isAdmin) {
         document.getElementById("adminTools").style.display = "none";
         document.getElementById("companionSection").style.display = "none";
-        document.getElementById("statusInfo").innerText = "Profil: " + filters.companion;
+        document.getElementById("statusInfo").innerText = "Profilansicht: " + filters.companion;
     } else {
-        document.getElementById("statusInfo").innerText = "Admin-Modus";
+        document.getElementById("statusInfo").innerText = "Admin-Kontrollzentrum";
     }
     await loadData();
 }
@@ -179,7 +179,7 @@ async function loadData() {
             };
         });
         render();
-    } catch (e) { document.getElementById("statusInfo").innerText = "JSON-Fehler!"; }
+    } catch (e) { document.getElementById("statusInfo").innerText = "Fehler: daten.json fehlt!"; }
 }
 
 function parseAnyDate(dStr, tStr) {
@@ -252,8 +252,9 @@ function render() {
         const isFuture = m.fD > now;
         const isDabei = m.begleiter.includes(filters.companion || "");
         
-        // Filter: Begleiter sehen nur eigene vergangene Spiele ODER alle zukünftigen
-        if(filters.companion && !isDabei && !isFuture) return "";
+        // STRIKTERER FILTER:
+        // Im Begleiter-Modus: Blende ALLES aus, wo er nicht dabei ist (Vergangenheit UND Zukunft)
+        if(filters.companion && !isDabei) return "";
         
         const isH = m.ort === "H";
         const hN = isH ? m.meinVerein : m.gegner;
