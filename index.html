@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>KSV – Dashboard Pro</title>
+<title>KSV – Dashboard Precision</title>
 <style>
   :root{ 
     --blue:#003f8c; --red:#e30613; --bg:#0f172a; --card:#1e293b; 
@@ -61,7 +61,6 @@
   .st-on { background: var(--win); box-shadow: 0 0 8px var(--win); }
   .st-off { background: #475569; opacity: 0.2; }
   
-  /* Zukunft ausgrauen */
   .future-match { opacity: 0.35; filter: grayscale(0.8); }
 </style>
 </head>
@@ -197,9 +196,9 @@ function parseAnyDate(dStr, tStr) {
 
 function render() {
     const now = new Date();
-    data.sort((a,b) => b.fD - a.fD);
+    // Komplette Sortierung nach echtem Zeitstempel (Absteigend)
+    data.sort((a, b) => b.fD - a.fD);
     
-    // Nur gespielte Spiele in der Vergangenheit für Stats & Ticker
     const played = data.filter(d => d.played && d.fD <= now).sort((a,b) => a.fD - b.fD);
     const relevant = filters.companion ? 
         played.filter(m => m.begleiter.includes(filters.companion)) : 
@@ -224,7 +223,7 @@ function render() {
         if(tickerInterval) clearInterval(tickerInterval);
         tickerInterval = setInterval(() => {
             let diff = new Date() - lastVisit;
-            if (diff < 0) diff = 0;
+            if (diff < 0) diff = 0; // Kein Minus
             const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
             document.getElementById("liveTicker").innerText = `${d}t ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
         }, 1000);
@@ -233,11 +232,8 @@ function render() {
             const b = document.getElementById(`m-${n}`);
             if(b) b.className = relevant.length >= n ? "badge-img active-badge" : "badge-img";
         });
-    } else {
-        document.getElementById("liveTicker").innerText = "00t 00h 00m 00s";
     }
 
-    // Tabelle Spielplan mit Ausgrauen für Zukunft
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
         const isFuture = m.fD > now;
@@ -247,16 +243,14 @@ function render() {
         const isH = m.ort === "H";
         const hN = isH ? m.meinVerein : m.gegner;
         const aN = isH ? m.gegner : m.meinVerein;
-        
         const rowClass = isFuture ? 'future-match' : '';
-        const dotClass = (m.begleiter.trim()!='' && !isFuture) ? 'st-on' : 'st-off';
 
         return `<tr class="${rowClass}">
             <td style="font-size:0.7rem">${m.datum}</td><td><span class="ort-tag">${m.ort}</span></td>
             <td><div class="team-cell h-align"><span>${hN}</span><img src="${hN}.png" class="logo-img" onerror="this.style.visibility='hidden'"></div></td>
             <td><div class="score-box">${(m.played && !isFuture) ? (isH ? m.tK+':'+m.tG : m.tG+':'+m.tK) : '-:-'}</div></td>
             <td><div class="team-cell a-align"><img src="${aN}.png" class="logo-img" onerror="this.style.visibility='hidden'"><span>${aN}</span></div></td>
-            <td><span class="st-dot ${dotClass}"></span></td>
+            <td><span class="st-dot ${m.begleiter.trim()!='' && !isFuture ? 'st-on' : 'st-off'}"></span></td>
         </tr>`;
     }).join("");
 
