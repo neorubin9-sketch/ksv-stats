@@ -15,6 +15,7 @@
   body{ margin:0; padding:10px; background: var(--bg); color:var(--text); line-height: 1.5; }
   .container { max-width: 1650px; margin: 0 auto; display: none; } 
 
+  /* Mobile Optimierung */
   @media (max-width: 600px) {
     .header { padding: 15px !important; flex-direction: column; gap: 15px; text-align: center; }
     .ticker-val { font-size: 1.8rem !important; }
@@ -25,11 +26,13 @@
     .score-box { width: 60px !important; font-size: 1rem !important; }
   }
 
+  /* Login Overlay */
   #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
   .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 350px; }
   input[type="password"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 20px; text-align: center; font-size: 1rem; outline: none; }
   .btn-action { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
 
+  /* Header & UI */
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
   .generator-section { background: rgba(96, 165, 250, 0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--blue); margin-bottom: 20px; }
   .badge-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
@@ -79,18 +82,18 @@
   <div class="header">
     <div id="statusHeader">
         <h2 style="margin:0; font-size: 1.4rem;">KSV <span style="color:var(--red)">LOG MASTER</span></h2>
-        <div id="statusInfo" style="color:var(--text-dim); font-size: 0.75rem;">Daten werden geladen...</div>
+        <div id="statusInfo" style="color:var(--text-dim); font-size: 0.75rem;">Daten laden...</div>
     </div>
     <button class="btn-action" style="width:auto; padding: 8px 20px; background:var(--red)" onclick="logout()">LOGOUT</button>
   </div>
 
   <div class="generator-section" id="adminTools">
-    <div style="font-size: 0.7rem; color: #60a5fa; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">Begleiter-Link kopieren</div>
+    <div style="font-size: 0.7rem; color: #60a5fa; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">Link Generator</div>
     <div style="display:flex; gap:10px;">
         <select id="companionSelect" style="margin-bottom:0; flex:1;"></select>
-        <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK</button>
+        <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
     </div>
-    <div id="copyConfirm" style="font-size: 0.7rem; margin-top:5px; color:var(--win); display:none;">Kopiert! ✅</div>
+    <div id="copyConfirm" style="font-size: 0.7rem; margin-top:5px; color:var(--win); display:none;">Link kopiert! ✅</div>
   </div>
 
   <div class="badge-row" id="badgeRow">
@@ -150,7 +153,7 @@ async function showApp(isAdmin) {
     if(!isAdmin) {
         document.getElementById("adminTools").style.display = "none";
         document.getElementById("companionSection").style.display = "none";
-        document.getElementById("statusInfo").innerText = "Profil von " + filters.companion;
+        document.getElementById("statusInfo").innerText = "Profil: " + filters.companion;
     } else {
         document.getElementById("statusInfo").innerText = "Admin-Modus";
     }
@@ -176,7 +179,7 @@ async function loadData() {
             };
         });
         render();
-    } catch (e) { document.getElementById("statusInfo").innerText = "Fehler beim Laden!"; }
+    } catch (e) { document.getElementById("statusInfo").innerText = "JSON-Fehler!"; }
 }
 
 function parseAnyDate(dStr, tStr) {
@@ -213,7 +216,7 @@ function render() {
         playedPast.filter(m => m.begleiter.trim() !== "" && m.begleiter.toLowerCase() !== "nicht im stadion" && m.begleiter.toLowerCase() !== "keine zuschauer");
 
     if (relevant.length > 0) {
-        relevant.sort((a,b) => a.fD - b.fD); // Für Berechnung der Lücken aufsteigend
+        relevant.sort((a,b) => a.fD - b.fD);
         const firstVisit = relevant[0].fD;
         const lastVisit = relevant[relevant.length-1].fD;
         
@@ -249,9 +252,7 @@ function render() {
         const isFuture = m.fD > now;
         const isDabei = m.begleiter.includes(filters.companion || "");
         
-        // STRIKTER FILTER:
-        // Im Begleiter-Modus: Zeige nur Spiele, wo er dabei war ODER alle zukünftigen Spiele.
-        // Vergangene Spiele ohne diesen Begleiter werden komplett ignoriert.
+        // Filter: Begleiter sehen nur eigene vergangene Spiele ODER alle zukünftigen
         if(filters.companion && !isDabei && !isFuture) return "";
         
         const isH = m.ort === "H";
