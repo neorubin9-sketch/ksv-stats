@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>KSV – Dashboard Precision Fixed</title>
+<title>KSV – Live Manager Admin</title>
 <style>
   :root{ 
     --blue:#003f8c; --red:#e30613; --bg:#0f172a; --card:#1e293b; 
@@ -13,46 +13,55 @@
   *{box-sizing:border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent;}
   body{ margin:0; padding:10px; background: var(--bg); color:var(--text); line-height: 1.5; }
   .container { max-width: 1650px; margin: 0 auto; display: none; } 
+
   @media (max-width: 600px) {
     .header { padding: 15px !important; flex-direction: column; gap: 15px; }
-    .ticker-val { font-size: 1.8rem !important; }
-    .match-table { font-size: 0.75rem; }
+    .ticker-val { font-size: 1.6rem !important; }
+    .match-table { font-size: 0.7rem; }
+    .name-tag { font-size: 0.6rem !important; }
   }
+
   #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
   .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 350px; }
-  input[type="password"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 20px; text-align: center; }
+  input[type="password"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 20px; text-align: center; outline: none; }
   .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; }
+  
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
   .admin-panel { background: rgba(96, 165, 250, 0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--blue); margin-bottom: 20px; }
-  .badge-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-  .badge-img { width: 70px; height: 70px; object-fit: contain; filter: grayscale(1) opacity(0.2); }
-  .active-badge { filter: grayscale(0) opacity(1) !important; transform: scale(1.05); }
+  
   .ticker-card { background: var(--card); border: 2px solid #60a5fa; border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: center; }
   .ticker-val { font-size: 2.5rem; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
+  
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
   .stat-mini { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
   .stat-mini b { font-size: 1rem; color: #fff; }
+
   .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
   @media (min-width: 1200px) { .main-grid { grid-template-columns: 1.8fr 1.2fr; } }
+  
   .table-container { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid var(--border); overflow-x: auto; }
-  .match-table { width:100%; border-collapse:collapse; min-width: 500px; }
+  .match-table { width:100%; border-collapse:collapse; min-width: 600px; }
   .match-table th { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; padding: 10px; border-bottom: 1px solid var(--border); }
   .match-table td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; text-align: center; }
-  .logo-img { width: 30px; height: 30px; object-fit: contain; }
-  .score-box { background: #0f172a; padding: 5px 0; border-radius: 8px; width: 70px; display: inline-block; font-weight: 800; border: 1px solid var(--border); }
-  .st-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-  .st-on { background: var(--win); box-shadow: 0 0 8px var(--win); }
-  .st-off { background: #475569; opacity: 0.2; }
-  .st-wait { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  
+  .logo-img { width: 28px; height: 28px; object-fit: contain; }
+  .score-box { background: #0f172a; padding: 5px 0; border-radius: 8px; width: 65px; display: inline-block; font-weight: 800; border: 1px solid var(--border); }
+  
+  .name-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .name-tag { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; display: inline-block; }
+  .tag-confirmed { background: var(--win); color: #000; }
+  .tag-request { background: var(--amber); color: #000; font-style: italic; }
+  
+  .st-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
   .btn-zusage { background: var(--win); color: #000; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 900; font-size: 0.65rem; cursor: pointer; }
-  .future-row { opacity: 0.75; filter: grayscale(0.6); }
+  .future-row { opacity: 0.8; filter: grayscale(0.5); }
 </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <div class="login-box">
-        <h2 style="margin-bottom:20px;">KSV Login</h2>
+        <h2 style="margin-bottom:20px;">KSV Dashboard Login</h2>
         <input type="password" id="passInput" placeholder="Passwort...">
         <button class="btn-action" onclick="checkLogin()">LOGIN</button>
     </div>
@@ -62,28 +71,22 @@
   <div class="header">
     <div>
         <h2 style="margin:0; font-size: 1.4rem;">KSV LIVE MANAGER</h2>
-        <div id="statusInfo" style="color:var(--text-dim); font-size: 0.75rem;">Synchronisiere...</div>
+        <div id="statusInfo" style="color:var(--text-dim); font-size: 0.75rem;">Lade Daten...</div>
     </div>
     <button class="btn-action" style="width:auto; background:var(--red)" onclick="logout()">LOGOUT</button>
   </div>
 
   <div class="admin-panel" id="adminTools">
-    <div style="display:flex; gap:10px;">
-        <select id="companionSelect" style="margin:0; flex:1;"></select>
+    <div style="display:flex; gap:10px; flex-wrap: wrap;">
+        <select id="companionSelect" style="margin:0; flex:1; min-width: 200px;"></select>
         <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK</button>
-        <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET ZUSAGEN</button>
+        <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET CLOUD</button>
     </div>
-  </div>
-
-  <div class="badge-row" id="badgeRow">
-    <img src="10.png" id="m-10" class="badge-img"><img src="25.png" id="m-25" class="badge-img">
-    <img src="50.png" id="m-50" class="badge-img"><img src="100.png" id="m-100" class="badge-img">
-    <img src="250.png" id="m-250" class="badge-img"><img src="500.png" id="m-500" class="badge-img">
   </div>
 
   <div class="ticker-card">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div id="tickerDesc" style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Abwesenheit vom Stadion</div>
+    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Abwesenheit vom Stadion</div>
   </div>
 
   <div class="stats-bar">
@@ -95,14 +98,14 @@
 
   <div class="main-grid">
     <div class="table-container">
-      <h3>📅 SPIELPLAN</h3>
+      <h3>📅 SPIELPLAN & BEGLEITER</h3>
       <table class="match-table" id="matchTable">
-        <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Status</th></tr></thead>
+        <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Dabei / Anfragen</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
     <div class="table-container" id="companionSection">
-        <h3>👤 BEGLEITER</h3>
+        <h3>👤 BEGLEITER-STATS</h3>
         <table id="companionTable" style="width:100%; border-collapse:collapse;">
           <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>NAME</th><th>SPIELE</th><th>LÜCKE</th></tr></thead>
           <tbody></tbody>
@@ -113,7 +116,7 @@
 
 <script>
 const ADMIN_PASSWORD = "KSV"; 
-const NPOINT_ID = "15abfbbebe2742f743b2"; // Deine ID vom Screenshot
+const NPOINT_ID = "15abfbbebe2742f743b2"; 
 const DB_URL = `https://api.npoint.io/${NPOINT_ID}`;
 
 let data = [], ZusagenCloud = [], filters = {companion: null}, tickerInterval = null;
@@ -154,38 +157,33 @@ async function refreshData() {
             ort: (r["Ort"] || "H").toUpperCase(),
             tK: r["Tore Kiel"] || 0, tG: r["Tore Gegner"] || 0,
             played: r["Tore Kiel"] !== undefined && r["Tore Kiel"] !== "" && r["Tore Kiel"] !== "-:-",
-            begleiter: r["Begleiter"] || ""
+            begleiter: (r["Begleiter"] || "").trim()
         }));
         render();
-        document.getElementById("statusInfo").innerText = "Daten aktuell";
+        document.getElementById("statusInfo").innerText = "Daten synchronisiert";
     } catch (e) { document.getElementById("statusInfo").innerText = "Ladefehler!"; }
 }
 
-// FIX: Datums-Parser erzwingt deutsches Format (Tag, Monat, Jahr)
 function parseFixDate(dStr, tStr) {
     if (!dStr) return new Date();
     let clean = dStr.replace(/^[a-zA-Z]{2,3},\s/, '').trim();
     const parts = clean.split(/[./]/);
     let dO;
     if (parts.length === 3) {
-        // Erzwinge: Tag=parts[0], Monat=parts[1], Jahr=parts[2]
         dO = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
     } else { dO = new Date(clean); }
-    if (tStr && tStr.includes(':')) {
-        const tp = tStr.split(':');
-        dO.setHours(parseInt(tp[0]), parseInt(tp[1]), 0, 0);
-    } else { dO.setHours(15, 30, 0, 0); }
+    if (tStr && tStr.includes(':')) { const tp = tStr.split(':'); dO.setHours(tp[0], tp[1], 0, 0); }
+    else { dO.setHours(15, 30, 0, 0); }
     return dO;
 }
 
 function render() {
     const now = new Date();
-    data.sort((a,b) => b.fD - a.fD); // Sortierung Neueste zuerst
-    
+    data.sort((a,b) => b.fD - a.fD);
     const playedPast = data.filter(d => d.played && d.fD <= now);
     const relevant = filters.companion ? 
         playedPast.filter(m => m.begleiter.includes(filters.companion)) : 
-        playedPast.filter(m => m.begleiter.trim() !== "" && m.begleiter.toLowerCase() !== "nicht im stadion");
+        playedPast.filter(m => m.begleiter !== "" && m.begleiter.toLowerCase() !== "nicht im stadion");
 
     if (relevant.length > 0) {
         relevant.sort((a,b) => a.fD - b.fD);
@@ -196,28 +194,29 @@ function render() {
             const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
             document.getElementById("liveTicker").innerText = `${d}t ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
         }, 1000);
-        [10, 25, 50, 100, 250, 500].forEach(n => {
-            document.getElementById(`m-${n}`).className = relevant.length >= n ? "badge-img active-badge" : "badge-img";
-        });
     }
 
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
         const isFuture = m.fD > now;
-        const isConfirmed = m.begleiter.includes(filters.companion || "");
-        const hasReq = ZusagenCloud.filter(z => z.date === m.datum).map(z => z.user);
-        
+        const confirmedList = m.begleiter ? m.begleiter.split(/,| und /).map(n => n.trim()) : [];
+        const isConfirmed = confirmedList.includes(filters.companion || "");
+        const requests = ZusagenCloud.filter(z => z.date === m.datum).map(z => z.user);
+        const hasRequested = requests.includes(filters.companion);
+
         if(filters.companion && !isConfirmed && !isFuture) return "";
 
-        let stHtml = "";
-        if(isFuture) {
-            if(filters.companion) {
-                stHtml = isConfirmed ? '<span class="st-dot st-on"></span>' : (hasReq.includes(filters.companion) ? '<span class="st-dot st-wait"></span>' : `<button class="btn-zusage" onclick="submitZusage('${m.datum}')">DABEI!</button>`);
+        let nameDisplayHtml = "";
+        if(filters.companion) {
+            if(isFuture) {
+                nameDisplayHtml = isConfirmed ? '<span class="name-tag tag-confirmed">BESTÄTIGT</span>' : (hasRequested ? '<span class="name-tag tag-request">ANGEFRAGT...</span>' : `<button class="btn-zusage" onclick="submitZusage('${m.datum}')">DABEI!</button>`);
             } else {
-                stHtml = isConfirmed ? '<span class="st-dot st-on"></span>' : (hasReq.length > 0 ? `<span class="st-dot st-wait" title="${hasReq.join(', ')}"></span>` : '<span class="st-dot st-off"></span>');
+                nameDisplayHtml = isConfirmed ? '<span class="st-dot st-on"></span>' : '<span class="st-dot st-off"></span>';
             }
         } else {
-            stHtml = `<span class="st-dot ${isConfirmed || (!filters.companion && m.begleiter.trim()!='') ? 'st-on' : 'st-off'}"></span>`;
+            let tags = confirmedList.map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("");
+            let reqs = requests.filter(n => !confirmedList.includes(n)).map(n => `<span class="name-tag tag-request">? ${n}</span>`).join("");
+            nameDisplayHtml = `<div class="name-container">${tags}${reqs}</div>`;
         }
 
         return `<tr class="${isFuture ? 'future-row' : ''}">
@@ -225,7 +224,7 @@ function render() {
             <td style="text-align:right"><b>${m.ort=='H'?m.meinVerein:m.gegner}</b> <img src="${m.ort=='H'?m.meinVerein:m.gegner}.png" class="logo-img" onerror="this.style.display='none'"></td>
             <td><div class="score-box">${m.played && !isFuture ? (m.ort=='H'?m.tK+':'+m.tG:m.tG+':'+m.tK) : '-:-'}</div></td>
             <td style="text-align:left"><img src="${m.ort=='A'?m.meinVerein:m.gegner}.png" class="logo-img" onerror="this.style.display='none'"> <b>${m.ort=='A'?m.meinVerein:m.gegner}</b></td>
-            <td>${stHtml}</td>
+            <td>${nameDisplayHtml}</td>
         </tr>`;
     }).join("");
 
@@ -238,18 +237,19 @@ function render() {
                 comps[name].sp++; comps[name].last = m.fD;
             });
         });
-        document.getElementById("companionSelect").innerHTML = '<option value="">Name...</option>' + Object.keys(comps).sort().map(n => `<option value="${n}">${n}</option>`).join("");
+        document.getElementById("companionSelect").innerHTML = '<option value="">Wähle Name...</option>' + Object.keys(comps).sort().map(n => `<option value="${n}">${n}</option>`).join("");
         document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps).sort((a,b)=>b[1].sp - a[1].sp).map(([n, s]) => `
-            <tr><td style="padding:10px; font-weight:bold; text-align:left;">${n}</td><td>${s.sp}x</td><td style="color:var(--red)">${Math.floor((now-s.last)/86400000)} T.</td></tr>`).join("");
+            <tr onclick="window.location.href='?user=${encodeURIComponent(n)}'">
+                <td style="padding:10px; font-weight:bold; text-align:left;">${n}</td><td>${s.sp}x</td><td style="color:var(--red)">${Math.floor((now-s.last)/86400000)} T.</td></tr>`).join("");
     }
 }
 
 async function submitZusage(datum) {
     if(!filters.companion) return;
+    if(ZusagenCloud.some(z => z.user === filters.companion && z.date === datum)) return alert("Schon angefragt!");
     ZusagenCloud.push({ user: filters.companion, date: datum });
     await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ zusagen: ZusagenCloud }) });
-    alert("Zusage gespeichert! ✅");
-    refreshData();
+    alert("Anfrage gesendet!"); refreshData();
 }
 
 async function clearCloud() {
@@ -262,7 +262,7 @@ async function clearCloud() {
 function copyLink() {
     const name = document.getElementById("companionSelect").value;
     const url = window.location.href.split('?')[0] + "?user=" + encodeURIComponent(name);
-    navigator.clipboard.writeText(url).then(() => alert("Kopiert!"));
+    navigator.clipboard.writeText(url).then(() => alert("Link kopiert!"));
 }
 function logout() { window.location.href = window.location.pathname; }
 </script>
