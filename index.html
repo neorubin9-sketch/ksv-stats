@@ -173,7 +173,6 @@ function parseFixDate(dStr, tStr) {
         dO = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
     } else { dO = new Date(clean); }
     if (tStr && tStr.includes(':')) { const tp = tStr.split(':'); dO.setHours(tp[0], tp[1], 0, 0); }
-    else { dO.setHours(15, 30, 0, 0); }
     return dO;
 }
 
