@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>KSV – Live Manager Admin</title>
+<title>KSV – Log Master Pro</title>
 <style>
   :root{ 
     --blue:#003f8c; --red:#e30613; --bg:#0f172a; --card:#1e293b; 
@@ -15,10 +15,10 @@
   .container { max-width: 1650px; margin: 0 auto; display: none; } 
 
   @media (max-width: 600px) {
-    .header { padding: 15px !important; flex-direction: column; gap: 15px; }
+    .header { padding: 15px !important; flex-direction: column; gap: 15px; text-align: center; }
     .ticker-val { font-size: 1.6rem !important; }
     .match-table { font-size: 0.7rem; }
-    .name-tag { font-size: 0.6rem !important; }
+    .stats-bar { grid-template-columns: 1fr 1fr !important; }
   }
 
   #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
@@ -34,7 +34,8 @@
   
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
   .stat-mini { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
-  .stat-mini b { font-size: 1rem; color: #fff; }
+  .stat-mini span { display: block; font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 5px; }
+  .stat-mini b { font-size: 1.1rem; color: #fff; }
 
   .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
   @media (min-width: 1200px) { .main-grid { grid-template-columns: 1.8fr 1.2fr; } }
@@ -54,14 +55,14 @@
   
   .st-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
   .btn-zusage { background: var(--win); color: #000; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 900; font-size: 0.65rem; cursor: pointer; }
-  .future-row { opacity: 0.8; filter: grayscale(0.5); }
+  .future-row { opacity: 0.85; filter: grayscale(0.3); }
 </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <div class="login-box">
-        <h2 style="margin-bottom:20px;">KSV Dashboard Login</h2>
+        <h2 style="margin-bottom:20px;">KSV Dashboard</h2>
         <input type="password" id="passInput" placeholder="Passwort...">
         <button class="btn-action" onclick="checkLogin()">LOGIN</button>
     </div>
@@ -70,16 +71,17 @@
 <div class="container" id="mainApp">
   <div class="header">
     <div>
-        <h2 style="margin:0; font-size: 1.4rem;">KSV LIVE MANAGER</h2>
-        <div id="statusInfo" style="color:var(--text-dim); font-size: 0.75rem;">Lade Daten...</div>
+        <h2 style="margin:0; font-size: 1.4rem;">KSV <span style="color:var(--red)">LOG MASTER</span></h2>
+        <div id="statusInfo" style="color:var(--text-dim); font-size: 0.75rem;">Daten werden geladen...</div>
     </div>
-    <button class="btn-action" style="width:auto; background:var(--red)" onclick="logout()">LOGOUT</button>
+    <button class="btn-action" style="width:auto; padding: 8px 20px; background:var(--red)" onclick="logout()">LOGOUT</button>
   </div>
 
   <div class="admin-panel" id="adminTools">
+    <div style="font-size: 0.7rem; color: #60a5fa; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">Link Generator</div>
     <div style="display:flex; gap:10px; flex-wrap: wrap;">
         <select id="companionSelect" style="margin:0; flex:1; min-width: 200px;"></select>
-        <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK</button>
+        <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
         <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET CLOUD</button>
     </div>
   </div>
@@ -168,25 +170,41 @@ function parseFixDate(dStr, tStr) {
     if (!dStr) return new Date();
     let clean = dStr.replace(/^[a-zA-Z]{2,3},\s/, '').trim();
     const parts = clean.split(/[./]/);
-    let dO;
-    if (parts.length === 3) {
-        dO = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-    } else { dO = new Date(clean); }
+    let dO = parts.length === 3 ? new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0])) : new Date(clean);
     if (tStr && tStr.includes(':')) { const tp = tStr.split(':'); dO.setHours(tp[0], tp[1], 0, 0); }
+    else { dO.setHours(15, 30, 0, 0); }
     return dO;
 }
 
 function render() {
     const now = new Date();
     data.sort((a,b) => b.fD - a.fD);
-    const playedPast = data.filter(d => d.played && d.fD <= now);
+    
+    // STATS BERECHNUNG
+    const playedPast = data.filter(d => d.played && d.fD <= now).sort((a,b) => a.fD - b.fD);
     const relevant = filters.companion ? 
         playedPast.filter(m => m.begleiter.includes(filters.companion)) : 
-        playedPast.filter(m => m.begleiter !== "" && m.begleiter.toLowerCase() !== "nicht im stadion");
+        playedPast.filter(m => m.begleiter !== "" && m.begleiter.toLowerCase() !== "nicht im stadion" && m.begleiter.toLowerCase() !== "keine zuschauer");
 
     if (relevant.length > 0) {
-        relevant.sort((a,b) => a.fD - b.fD);
+        const firstVisit = relevant[0].fD;
         const lastVisit = relevant[relevant.length-1].fD;
+        
+        let gaps = [];
+        for(let i=1; i < relevant.length; i++) {
+            gaps.push(Math.max(0, Math.floor((relevant[i].fD - relevant[i-1].fD) / 86400000)));
+        }
+
+        document.getElementById("statCount").innerText = relevant.length;
+        if (gaps.length > 0) {
+            document.getElementById("statMax").innerText = Math.max(...gaps) + " T.";
+            document.getElementById("statGap").innerText = (gaps.reduce((a,b)=>a+b,0)/gaps.length).toFixed(0) + " T.";
+        } else {
+            document.getElementById("statMax").innerText = "0 T.";
+            document.getElementById("statGap").innerText = "0 T.";
+        }
+        document.getElementById("statFreq").innerText = (Math.floor((now - firstVisit)/86400000) / relevant.length).toFixed(0) + " T.";
+
         if(tickerInterval) clearInterval(tickerInterval);
         tickerInterval = setInterval(() => {
             const diff = Math.max(0, new Date() - lastVisit);
@@ -195,6 +213,7 @@ function render() {
         }, 1000);
     }
 
+    // SPIELPLAN RENDERN
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
         const isFuture = m.fD > now;
@@ -227,19 +246,32 @@ function render() {
         </tr>`;
     }).join("");
 
+    // BEGLEITER DROPDOWN & TABELLE BEFÜLLEN
     if(!filters.companion) {
         const comps = {};
-        playedPast.forEach(m => {
+        // Alle Begleiter aus allen Spielen sammeln
+        data.forEach(m => {
+            if(!m.begleiter) return;
             m.begleiter.split(/,| und /).forEach(n => {
-                const name = n.trim(); if(!name) return;
+                const name = n.trim();
+                if(!name || name.toLowerCase() === "nicht im stadion" || name.toLowerCase() === "keine zuschauer") return;
                 if(!comps[name]) comps[name] = {sp: 0, last: null};
-                comps[name].sp++; comps[name].last = m.fD;
+                if(m.played && m.fD <= now) {
+                    comps[name].sp++;
+                    if(!comps[name].last || m.fD > comps[name].last) comps[name].last = m.fD;
+                }
             });
         });
-        document.getElementById("companionSelect").innerHTML = '<option value="">Wähle Name...</option>' + Object.keys(comps).sort().map(n => `<option value="${n}">${n}</option>`).join("");
+
+        const sortedNames = Object.keys(comps).sort();
+        document.getElementById("companionSelect").innerHTML = '<option value="">Wähle Name...</option>' + sortedNames.map(n => `<option value="${n}">${n}</option>`).join("");
+        
         document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps).sort((a,b)=>b[1].sp - a[1].sp).map(([n, s]) => `
-            <tr onclick="window.location.href='?user=${encodeURIComponent(n)}'">
-                <td style="padding:10px; font-weight:bold; text-align:left;">${n}</td><td>${s.sp}x</td><td style="color:var(--red)">${Math.floor((now-s.last)/86400000)} T.</td></tr>`).join("");
+            <tr onclick="window.location.href='?user=${encodeURIComponent(n)}'" style="cursor:pointer;">
+                <td style="padding:10px; font-weight:bold; text-align:left;">${n}</td>
+                <td>${s.sp}x</td>
+                <td style="color:var(--red)">${s.last ? Math.floor((now-s.last)/86400000) : '-'} T.</td>
+            </tr>`).join("");
     }
 }
 
@@ -247,8 +279,10 @@ async function submitZusage(datum) {
     if(!filters.companion) return;
     if(ZusagenCloud.some(z => z.user === filters.companion && z.date === datum)) return alert("Schon angefragt!");
     ZusagenCloud.push({ user: filters.companion, date: datum });
-    await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ zusagen: ZusagenCloud }) });
-    alert("Anfrage gesendet!"); refreshData();
+    try {
+        await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ zusagen: ZusagenCloud }) });
+        alert("Anfrage gesendet!"); refreshData();
+    } catch(e) { alert("Fehler beim Senden!"); }
 }
 
 async function clearCloud() {
@@ -260,8 +294,9 @@ async function clearCloud() {
 
 function copyLink() {
     const name = document.getElementById("companionSelect").value;
+    if(!name) return alert("Bitte wähle einen Begleiter!");
     const url = window.location.href.split('?')[0] + "?user=" + encodeURIComponent(name);
-    navigator.clipboard.writeText(url).then(() => alert("Link kopiert!"));
+    navigator.clipboard.writeText(url).then(() => alert("Link für " + name + " kopiert!"));
 }
 function logout() { window.location.href = window.location.pathname; }
 </script>
