@@ -3,41 +3,38 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>KSV – Dashboard Precision</title>
+<title>KSV – Log & Manager</title>
 <style>
   :root{ 
     --blue:#003f8c; --red:#e30613; --bg:#0f172a; --card:#1e293b; 
     --border:#334155; --text:#f8fafc; --text-dim:#94a3b8;
-    --win:#22c55e;
+    --win:#22c55e; --amber:#f59e0b;
   }
   
   *{box-sizing:border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent;}
   body{ margin:0; padding:10px; background: var(--bg); color:var(--text); line-height: 1.5; }
   .container { max-width: 1650px; margin: 0 auto; display: none; } 
 
-  /* Mobile Optimierung */
   @media (max-width: 600px) {
     .header { padding: 15px !important; flex-direction: column; gap: 15px; text-align: center; }
     .ticker-val { font-size: 1.8rem !important; }
     .stats-bar { grid-template-columns: 1fr 1fr !important; }
     .badge-img { width: 50px !important; height: 50px !important; }
-    .match-table { font-size: 0.8rem; }
+    .match-table { font-size: 0.75rem; }
     .logo-img { width: 25px !important; height: 25px !important; }
-    .score-box { width: 60px !important; font-size: 1rem !important; }
+    .score-box { width: 55px !important; font-size: 0.9rem !important; }
   }
 
-  /* Login Overlay */
   #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
   .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 350px; }
   input[type="password"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 20px; text-align: center; font-size: 1rem; outline: none; }
-  .btn-action { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
+  .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
 
-  /* UI Header */
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
   .generator-section { background: rgba(96, 165, 250, 0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--blue); margin-bottom: 20px; }
   .badge-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
   .badge-img { width: 70px; height: 70px; object-fit: contain; filter: grayscale(1) opacity(0.2); transition: 0.5s; }
-  .active-badge { filter: grayscale(0) opacity(1) !important; transform: scale(1.05); filter: drop-shadow(0 0 10px rgba(96, 165, 250, 0.5)); }
+  .active-badge { filter: grayscale(0) opacity(1) !important; transform: scale(1.05); }
 
   .ticker-card { background: var(--card); border: 2px solid #60a5fa; border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: center; }
   .ticker-val { font-size: 2.5rem; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
@@ -63,24 +60,25 @@
   .st-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
   .st-on { background: var(--win); box-shadow: 0 0 8px var(--win); }
   .st-off { background: #475569; opacity: 0.2; }
-  
-  .future-match { opacity: 0.35; filter: grayscale(0.8); }
+  .st-wait { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+
+  .btn-zusage { background: var(--win); color: #000; border: none; padding: 5px 10px; border-radius: 5px; font-weight: 900; font-size: 0.6rem; cursor: pointer; }
+  .future-match { opacity: 0.6; }
 </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <div class="login-box">
-        <h2 style="margin:0 0 20px 0;">KSV Login</h2>
+        <h2 style="margin:0 0 20px 0;">KSV Admin</h2>
         <input type="password" id="passInput" placeholder="Passwort...">
-        <button class="btn-action" onclick="checkLogin()">EINLOGGEN</button>
-        <p id="loginError" style="color:var(--red); font-size:0.8rem; margin-top:15px; display:none;">Falsch!</p>
+        <button class="btn-action" onclick="checkLogin()">LOGIN</button>
     </div>
 </div>
 
 <div class="container" id="mainApp">
   <div class="header">
-    <div id="statusHeader">
+    <div>
         <h2 style="margin:0; font-size: 1.4rem;">KSV <span style="color:var(--red)">LOG MASTER</span></h2>
         <div id="statusInfo" style="color:var(--text-dim); font-size: 0.75rem;">Daten werden geladen...</div>
     </div>
@@ -91,7 +89,7 @@
     <div style="font-size: 0.7rem; color: #60a5fa; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">Begleiter-Link Generator</div>
     <div style="display:flex; gap:10px;">
         <select id="companionSelect" style="margin-bottom:0; flex:1;"></select>
-        <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
+        <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK</button>
     </div>
     <div id="copyConfirm" style="font-size: 0.7rem; margin-top:5px; color:var(--win); display:none;">Link kopiert! ✅</div>
   </div>
@@ -116,9 +114,9 @@
 
   <div class="main-grid">
     <div class="table-container">
-      <h3 style="margin-top:0; font-size: 1rem;">📅 SPIELPLAN</h3>
+      <h3 style="margin-top:0; font-size: 1rem;">📅 SPIELPLAN & ZUSAGEN</h3>
       <table class="match-table" id="matchTable">
-        <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Dabei</th></tr></thead>
+        <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Status</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -144,7 +142,7 @@ window.onload = async () => {
 
 function checkLogin() {
     if(document.getElementById("passInput").value === ADMIN_PASSWORD) showApp(true);
-    else document.getElementById("loginError").style.display = "block";
+    else alert("Falsches Passwort");
 }
 
 async function showApp(isAdmin) {
@@ -155,7 +153,7 @@ async function showApp(isAdmin) {
         document.getElementById("companionSection").style.display = "none";
         document.getElementById("statusInfo").innerText = "Profilansicht: " + filters.companion;
     } else {
-        document.getElementById("statusInfo").innerText = "Admin-Kontrollzentrum";
+        document.getElementById("statusInfo").innerText = "Admin-Modus";
     }
     await loadData();
 }
@@ -175,11 +173,12 @@ async function loadData() {
                 ort: (r["Ort"] || "H").toUpperCase(),
                 tK: r["Tore Kiel"] || 0, tG: r["Tore Gegner"] || 0,
                 played: r["Tore Kiel"] !== undefined && r["Tore Kiel"] !== "" && r["Tore Kiel"] !== "-:-",
-                begleiter: r["Begleiter"] || ""
+                begleiter: r["Begleiter"] || "",
+                anfragen: r["Anfragen"] || "" // Neue Spalte für Admin-Übersicht
             };
         });
         render();
-    } catch (e) { document.getElementById("statusInfo").innerText = "Fehler: daten.json fehlt!"; }
+    } catch (e) { document.getElementById("statusInfo").innerText = "JSON fehlt!"; }
 }
 
 function parseAnyDate(dStr, tStr) {
@@ -188,19 +187,11 @@ function parseAnyDate(dStr, tStr) {
     const parts = clean.split(/[./]/);
     let dateObj;
     if (parts.length === 3) {
-        const day = parseInt(parts[0]);
-        const month = parseInt(parts[1]) - 1;
-        const year = parseInt(parts[2]);
-        dateObj = new Date(year, month, day);
-    } else {
-        dateObj = new Date(clean);
-    }
-    if (isNaN(dateObj.getTime())) return new Date();
+        dateObj = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    } else { dateObj = new Date(clean); }
     if (tStr && tStr.includes(':')) {
         const tp = tStr.split(':');
         dateObj.setHours(parseInt(tp[0]), parseInt(tp[1]), 0, 0);
-    } else {
-        dateObj.setHours(15, 30, 0, 0);
     }
     return dateObj;
 }
@@ -209,29 +200,14 @@ function render() {
     const now = new Date();
     data.sort((a,b) => b.fD - a.fD);
     
-    // Stats-Logik: Nur Spiele, die wirklich stattgefunden haben
     const playedPast = data.filter(d => d.played && d.fD <= now);
     const relevant = filters.companion ? 
         playedPast.filter(m => m.begleiter.includes(filters.companion)) : 
-        playedPast.filter(m => m.begleiter.trim() !== "" && m.begleiter.toLowerCase() !== "nicht im stadion" && m.begleiter.toLowerCase() !== "keine zuschauer");
+        playedPast.filter(m => m.begleiter.trim() !== "" && m.begleiter.toLowerCase() !== "nicht im stadion");
 
     if (relevant.length > 0) {
         relevant.sort((a,b) => a.fD - b.fD);
-        const firstVisit = relevant[0].fD;
         const lastVisit = relevant[relevant.length-1].fD;
-        
-        let gaps = [];
-        for(let i=1; i < relevant.length; i++) {
-            gaps.push(Math.max(0, Math.floor((relevant[i].fD - relevant[i-1].fD) / 86400000)));
-        }
-        
-        document.getElementById("statCount").innerText = relevant.length;
-        if (gaps.length > 0) {
-            document.getElementById("statMax").innerText = Math.max(...gaps) + " T.";
-            document.getElementById("statGap").innerText = (gaps.reduce((a,b)=>a+b,0)/gaps.length).toFixed(0) + " T.";
-        }
-        document.getElementById("statFreq").innerText = (Math.floor((now - firstVisit)/86400000) / relevant.length).toFixed(0) + " T.";
-
         if(tickerInterval) clearInterval(tickerInterval);
         tickerInterval = setInterval(() => {
             let diff = new Date() - lastVisit;
@@ -246,51 +222,60 @@ function render() {
         });
     }
 
-    // Tabelle Spielplan
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
         const isFuture = m.fD > now;
         const isDabei = m.begleiter.includes(filters.companion || "");
         
-        // STRIKTERER FILTER:
-        // Im Begleiter-Modus: Blende ALLES aus, wo er nicht dabei ist (Vergangenheit UND Zukunft)
-        if(filters.companion && !isDabei) return "";
+        // Filter für Begleiter: Nur eigene Spiele ODER alle zukünftigen zum Zusagen
+        if(filters.companion && !isDabei && !isFuture) return "";
         
         const isH = m.ort === "H";
         const hN = isH ? m.meinVerein : m.gegner;
         const aN = isH ? m.gegner : m.meinVerein;
-        const rowClass = isFuture ? 'future-match' : '';
+        
+        let statusHtml = "";
+        if (isFuture) {
+            if (filters.companion) {
+                statusHtml = isDabei ? '<span class="st-dot st-on"></span>' : `<button class="btn-zusage" onclick="sendZusage('${m.datum}', '${m.gegner}')">ZUSAGEN</button>`;
+            } else {
+                // Admin sieht Anfragen
+                statusHtml = m.anfragen ? `<span title="${m.anfragen}" class="st-dot st-wait"></span>` : '<span class="st-dot st-off"></span>';
+            }
+        } else {
+            statusHtml = `<span class="st-dot ${isDabei || (!filters.companion && m.begleiter.trim()!='') ? 'st-on' : 'st-off'}"></span>`;
+        }
 
-        return `<tr class="${rowClass}">
+        return `<tr class="${isFuture ? 'future-match' : ''}">
             <td style="font-size:0.7rem">${m.datum}</td><td><span class="ort-tag">${m.ort}</span></td>
             <td><div class="team-cell h-align"><span>${hN}</span><img src="${hN}.png" class="logo-img" onerror="this.style.visibility='hidden'"></div></td>
             <td><div class="score-box">${(m.played && !isFuture) ? (isH ? m.tK+':'+m.tG : m.tG+':'+m.tK) : '-:-'}</div></td>
             <td><div class="team-cell a-align"><img src="${aN}.png" class="logo-img" onerror="this.style.visibility='hidden'"><span>${aN}</span></div></td>
-            <td><span class="st-dot ${(m.begleiter.trim()!='' && !isFuture) ? 'st-on' : 'st-off'}"></span></td>
+            <td>${statusHtml}</td>
         </tr>`;
     }).join("");
 
     if(!filters.companion) {
         const comps = {};
-        playedPast.filter(m => m.begleiter.trim() !== "" && m.begleiter.toLowerCase() !== "nicht im stadion" && m.begleiter.toLowerCase() !== "keine zuschauer").forEach(m => {
+        playedPast.filter(m => m.begleiter.trim() !== "" && m.begleiter.toLowerCase() !== "nicht im stadion").forEach(m => {
             m.begleiter.split(/,| und /).forEach(n => {
                 const name = n.trim(); if(!name) return;
-                if(!comps[name]) comps[name] = {sp: 0, last: null, maxG: 0};
-                if(comps[name].last) {
-                    const g = Math.floor((m.fD - comps[name].last)/86400000);
-                    if(g > comps[name].maxG) comps[name].maxG = g;
-                }
+                if(!comps[name]) comps[name] = {sp: 0, last: null};
                 comps[name].sp++; comps[name].last = m.fD;
             });
         });
         document.getElementById("companionSelect").innerHTML = '<option value="">Wähle Name...</option>' + Object.keys(comps).sort().map(n => `<option value="${n}">${n}</option>`).join("");
-        document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps).sort((a,b)=>b[1].sp - a[1].sp).map(([n, s]) => {
-            const curLuecke = Math.floor((now - s.last)/86400000);
-            return `<tr onclick="window.location.href='?user=${encodeURIComponent(n)}'">
-                <td style="padding:10px; font-weight:bold; text-align:left;">${n}</td><td>${s.sp}x</td><td style="color:var(--red)">${curLuecke} T.</td>
-            </tr>`;
-        }).join("");
+        document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps).sort((a,b)=>b[1].sp - a[1].sp).map(([n, s]) => `
+            <tr onclick="window.location.href='?user=${encodeURIComponent(n)}'">
+                <td style="padding:10px; font-weight:bold; text-align:left;">${n}</td><td>${s.sp}x</td><td style="color:var(--red)">${Math.floor((now-s.last)/86400000)} T.</td>
+            </tr>`).join("");
     }
+}
+
+function sendZusage(datum, gegner) {
+    const text = `Moin! Ich (${filters.companion}) wäre am ${datum} gegen ${gegner} gerne dabei!`;
+    const url = `https://wa.me/DEINE_NUMMER?text=${encodeURIComponent(text)}`; // HIER DEINE WHATSAPP NUMMER EINTRAGEN
+    window.open(url, '_blank');
 }
 
 function copyLink() {
