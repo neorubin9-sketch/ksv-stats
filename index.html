@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>KSV – Log Master Pro</title>
+<title>KSV – Live Manager</title>
 <style>
   :root{ 
     --blue:#003f8c; --red:#e30613; --bg:#0f172a; --card:#1e293b; 
@@ -17,7 +17,6 @@
   @media (max-width: 600px) {
     .header { padding: 15px !important; flex-direction: column; gap: 15px; text-align: center; }
     .ticker-val { font-size: 1.6rem !important; }
-    .match-table { font-size: 0.7rem; }
     .stats-bar { grid-template-columns: 1fr 1fr !important; }
   }
 
@@ -37,9 +36,6 @@
   .stat-mini span { display: block; font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 5px; }
   .stat-mini b { font-size: 1.1rem; color: #fff; }
 
-  .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-  @media (min-width: 1200px) { .main-grid { grid-template-columns: 1.8fr 1.2fr; } }
-  
   .table-container { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid var(--border); overflow-x: auto; }
   .match-table { width:100%; border-collapse:collapse; min-width: 600px; }
   .match-table th { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; padding: 10px; border-bottom: 1px solid var(--border); }
@@ -47,22 +43,19 @@
   
   .logo-img { width: 28px; height: 28px; object-fit: contain; }
   .score-box { background: #0f172a; padding: 5px 0; border-radius: 8px; width: 65px; display: inline-block; font-weight: 800; border: 1px solid var(--border); }
-  
-  .name-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .name-tag { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; display: inline-block; }
   .tag-confirmed { background: var(--win); color: #000; }
   .tag-request { background: var(--amber); color: #000; font-style: italic; }
   
-  .st-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
   .btn-zusage { background: var(--win); color: #000; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 900; font-size: 0.65rem; cursor: pointer; }
-  .future-row { opacity: 0.85; filter: grayscale(0.3); }
+  .future-row { opacity: 0.85; }
 </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <div class="login-box">
-        <h2 style="margin-bottom:20px;">KSV Dashboard</h2>
+        <h2 style="margin-bottom:20px;">KSV Login</h2>
         <input type="password" id="passInput" placeholder="Passwort...">
         <button class="btn-action" onclick="checkLogin()">LOGIN</button>
     </div>
@@ -78,7 +71,6 @@
   </div>
 
   <div class="admin-panel" id="adminTools">
-    <div style="font-size: 0.7rem; color: #60a5fa; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">Link Generator</div>
     <div style="display:flex; gap:10px; flex-wrap: wrap;">
         <select id="companionSelect" style="margin:0; flex:1; min-width: 200px;"></select>
         <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
@@ -88,7 +80,7 @@
 
   <div class="ticker-card">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Abwesenheit vom Stadion</div>
+    <div id="tickerTitle" style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Abwesenheit vom Stadion</div>
   </div>
 
   <div class="stats-bar">
@@ -98,21 +90,12 @@
     <div class="stat-mini"><span>Spiele</span><b id="statCount">-</b></div>
   </div>
 
-  <div class="main-grid">
-    <div class="table-container">
-      <h3>📅 SPIELPLAN & BEGLEITER</h3>
-      <table class="match-table" id="matchTable">
-        <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Dabei / Anfragen</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-    <div class="table-container" id="companionSection">
-        <h3>👤 BEGLEITER-STATS</h3>
-        <table id="companionTable" style="width:100%; border-collapse:collapse;">
-          <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>NAME</th><th>SPIELE</th><th>LÜCKE</th></tr></thead>
-          <tbody></tbody>
-        </table>
-    </div>
+  <div class="table-container">
+    <h3>📅 SPIELPLAN & BEGLEITER</h3>
+    <table class="match-table" id="matchTable">
+      <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Dabei / Anfragen</th></tr></thead>
+      <tbody></tbody>
+    </table>
   </div>
 </div>
 
@@ -131,29 +114,23 @@ window.onload = async () => {
 
 function checkLogin() {
     if(document.getElementById("passInput").value === ADMIN_PASSWORD) showApp(true);
-    else alert("Passwort falsch!");
+    else alert("Falsch!");
 }
 
 async function showApp(isAdmin) {
     document.getElementById("loginOverlay").style.display = "none";
     document.getElementById("mainApp").style.display = "block";
-    if(!isAdmin) {
-        document.getElementById("adminTools").style.display = "none";
-        document.getElementById("companionSection").style.display = "none";
-    }
+    if(!isAdmin) document.getElementById("adminTools").style.display = "none";
     await refreshData();
 }
 
 async function refreshData() {
     try {
-        const [resExcel, resCloud] = await Promise.all([
-            fetch('daten.json?v=' + Date.now()),
-            fetch(DB_URL)
-        ]);
-        const excelJson = await resExcel.json();
-        const cloudJson = await resCloud.json();
-        ZusagenCloud = cloudJson.zusagen || [];
-        data = excelJson.map(r => ({
+        const [resEx, resCl] = await Promise.all([fetch('daten.json?v='+Date.now()), fetch(DB_URL)]);
+        const exJ = await resEx.json();
+        const clJ = await resCl.json();
+        ZusagenCloud = clJ.zusagen || [];
+        data = exJ.map(r => ({
             fD: parseFixDate(r["Datum"] || r["datum"], r["Uhrzeit"] || r["uhrzeit"]),
             datum: r["Datum"] || r["datum"], gegner: r["Gegner"], meinVerein: r["Mein Verein"],
             ort: (r["Ort"] || "H").toUpperCase(),
@@ -169,11 +146,8 @@ async function refreshData() {
 function parseFixDate(dStr, tStr) {
     if (!dStr) return new Date();
     let clean = dStr.replace(/^[a-zA-Z]{2,3},\s/, '').trim();
-    const parts = clean.split(/[./]/);
-    let dO;
-    if (parts.length === 3) {
-        dO = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-    } else { dO = new Date(clean); }
+    const p = clean.split(/[./]/);
+    let dO = p.length === 3 ? new Date(p[2], p[1]-1, p[0]) : new Date(clean);
     if (tStr && tStr.includes(':')) { const tp = tStr.split(':'); dO.setHours(tp[0], tp[1], 0, 0); }
     else { dO.setHours(15, 30, 0, 0); }
     return dO;
@@ -183,103 +157,82 @@ function render() {
     const now = new Date();
     data.sort((a,b) => b.fD - a.fD);
     
-    // STATS BERECHNUNG
+    // STATS & TICKER Logik
     const playedPast = data.filter(d => d.played && d.fD <= now).sort((a,b) => a.fD - b.fD);
     const relevant = filters.companion ? 
         playedPast.filter(m => m.begleiter.includes(filters.companion)) : 
-        playedPast.filter(m => m.begleiter !== "" && m.begleiter.toLowerCase() !== "nicht im stadion" && m.begleiter.toLowerCase() !== "keine zuschauer");
+        playedPast.filter(m => m.begleiter !== "" && m.begleiter.toLowerCase() !== "nicht im stadion");
 
     if (relevant.length > 0) {
-        const firstVisit = relevant[0].fD;
         const lastVisit = relevant[relevant.length-1].fD;
+        const firstVisit = relevant[0].fD;
         
-        let gaps = [];
-        for(let i=1; i < relevant.length; i++) {
-            gaps.push(Math.max(0, Math.floor((relevant[i].fD - relevant[i-1].fD) / 86400000)));
-        }
-
+        // Fülle Reiter oben
         document.getElementById("statCount").innerText = relevant.length;
-        if (gaps.length > 0) {
-            document.getElementById("statMax").innerText = Math.max(...gaps) + " T.";
-            document.getElementById("statGap").innerText = (gaps.reduce((a,b)=>a+b,0)/gaps.length).toFixed(0) + " T.";
+        let gaps = [];
+        for(let i=1; i<relevant.length; i++) gaps.push(Math.max(0, (relevant[i].fD - relevant[i-1].fD)/86400000));
+        if(gaps.length > 0) {
+            document.getElementById("statMax").innerText = Math.floor(Math.max(...gaps)) + " T.";
+            document.getElementById("statGap").innerText = Math.floor(gaps.reduce((a,b)=>a+b,0)/gaps.length) + " T.";
         }
-        document.getElementById("statFreq").innerText = (Math.floor((now - firstVisit)/86400000) / relevant.length).toFixed(0) + " T.";
+        document.getElementById("statFreq").innerText = Math.floor(((now - firstVisit)/86400000)/relevant.length) + " T.";
 
         if(tickerInterval) clearInterval(tickerInterval);
         tickerInterval = setInterval(() => {
-            const diff = Math.max(0, new Date() - lastVisit);
+            const diff = Math.max(0, now - lastVisit);
             const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
             document.getElementById("liveTicker").innerText = `${d}t ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
         }, 1000);
     }
 
-    // SPIELPLAN RENDERN
+    // TABELLE RENDERN
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
         const isFuture = m.fD > now;
-        const confirmedList = m.begleiter ? m.begleiter.split(/,| und /).map(n => n.trim()) : [];
+        const confirmedList = m.begleiter.split(/,| und /).map(n => n.trim());
         const isConfirmed = confirmedList.includes(filters.companion || "");
         const requests = ZusagenCloud.filter(z => z.date === m.datum).map(z => z.user);
         const hasRequested = requests.includes(filters.companion);
 
-        // KORREKTUR FILTER: Zeige im Begleiter-Profil nur eigene vergangene Spiele, aber ALLE zukünftigen Spiele an
+        // Filter: In Begleiter-Ansicht nur eigene vergangene ODER alle zukünftigen
         if(filters.companion && !isConfirmed && !isFuture) return "";
 
-        let nameDisplayHtml = "";
+        let statusHtml = "";
         if(filters.companion) {
             if(isFuture) {
-                nameDisplayHtml = isConfirmed ? '<span class="name-tag tag-confirmed">BESTÄTIGT</span>' : (hasRequested ? '<span class="name-tag tag-request">ANGEFRAGT...</span>' : `<button class="btn-zusage" onclick="submitZusage('${m.datum}')">DABEI!</button>`);
+                statusHtml = isConfirmed ? '<span class="name-tag tag-confirmed">BESTÄTIGT</span>' : (hasRequested ? '<span class="name-tag tag-request">ANGEFRAGT...</span>' : `<button class="btn-zusage" onclick="submitZusage('${m.datum}')">DABEI!</button>`);
             } else {
-                nameDisplayHtml = isConfirmed ? '<span class="st-dot st-on"></span>' : '<span class="st-dot st-off"></span>';
+                statusHtml = isConfirmed ? '✅' : '❌';
             }
         } else {
-            let tags = confirmedList.map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("");
-            let reqs = requests.filter(n => !confirmedList.includes(n)).map(n => `<span class="name-tag tag-request">? ${n}</span>`).join("");
-            nameDisplayHtml = `<div class="name-container">${tags}${reqs}</div>`;
+            let tags = confirmedList.filter(n => n!=="").map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join(" ");
+            let reqs = requests.filter(n => !confirmedList.includes(n)).map(n => `<span class="name-tag tag-request">? ${n}</span>`).join(" ");
+            statusHtml = tags + reqs;
         }
 
         return `<tr class="${isFuture ? 'future-row' : ''}">
-            <td style="font-size:0.7rem">${m.datum}</td><td><span class="ort-tag">${m.ort}</span></td>
-            <td style="text-align:right"><b>${m.ort=='H'?m.meinVerein:m.gegner}</b> <img src="${m.ort=='H'?m.meinVerein:m.gegner}.png" class="logo-img" onerror="this.style.display='none'"></td>
+            <td style="font-size:0.7rem">${m.datum}</td><td>${m.ort}</td>
+            <td style="text-align:right"><b>${m.ort=='H'?m.meinVerein:m.gegner}</b></td>
             <td><div class="score-box">${m.played && !isFuture ? (m.ort=='H'?m.tK+':'+m.tG:m.tG+':'+m.tK) : '-:-'}</div></td>
-            <td style="text-align:left"><img src="${m.ort=='A'?m.meinVerein:m.gegner}.png" class="logo-img" onerror="this.style.display='none'"> <b>${m.ort=='A'?m.meinVerein:m.gegner}</b></td>
-            <td>${nameDisplayHtml}</td>
+            <td style="text-align:left"><b>${m.ort=='A'?m.meinVerein:m.gegner}</b></td>
+            <td>${statusHtml}</td>
         </tr>`;
     }).join("");
 
+    // Dropdown füllen (Admin)
     if(!filters.companion) {
-        const comps = {};
-        data.forEach(m => {
-            if(!m.begleiter) return;
-            m.begleiter.split(/,| und /).forEach(n => {
-                const name = n.trim();
-                if(!name || name.toLowerCase() === "nicht im stadion" || name.toLowerCase() === "keine zuschauer") return;
-                if(!comps[name]) comps[name] = {sp: 0, last: null};
-                if(m.played && m.fD <= now) {
-                    comps[name].sp++;
-                    if(!comps[name].last || m.fD > comps[name].last) comps[name].last = m.fD;
-                }
-            });
-        });
-        const sortedNames = Object.keys(comps).sort();
-        document.getElementById("companionSelect").innerHTML = '<option value="">Wähle Name...</option>' + sortedNames.map(n => `<option value="${n}">${n}</option>`).join("");
-        document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps).sort((a,b)=>b[1].sp - a[1].sp).map(([n, s]) => `
-            <tr onclick="window.location.href='?user=${encodeURIComponent(n)}'" style="cursor:pointer;">
-                <td style="padding:10px; font-weight:bold; text-align:left;">${n}</td>
-                <td>${s.sp}x</td>
-                <td style="color:var(--red)">${s.last ? Math.floor((now-s.last)/86400000) : '-'} T.</td>
-            </tr>`).join("");
+        let allNames = new Set();
+        data.forEach(m => m.begleiter.split(/,| und /).forEach(n => { if(n.trim()) allNames.add(n.trim()); }));
+        document.getElementById("companionSelect").innerHTML = '<option value="">Wähle Begleiter...</option>' + Array.from(allNames).sort().map(n => `<option value="${n}">${n}</option>`).join("");
     }
 }
 
 async function submitZusage(datum) {
     if(!filters.companion) return;
-    if(ZusagenCloud.some(z => z.user === filters.companion && z.date === datum)) return alert("Schon angefragt!");
+    if(ZusagenCloud.some(z => z.user === filters.companion && z.date === datum)) return alert("Bereits angefragt!");
     ZusagenCloud.push({ user: filters.companion, date: datum });
-    try {
-        await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ zusagen: ZusagenCloud }) });
-        alert("Anfrage gesendet!"); refreshData();
-    } catch(e) { alert("Fehler!"); }
+    await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ zusagen: ZusagenCloud }) });
+    alert("Anfrage gesendet!"); refreshData();
 }
 
 async function clearCloud() {
@@ -290,9 +243,9 @@ async function clearCloud() {
 }
 
 function copyLink() {
-    const name = document.getElementById("companionSelect").value;
-    if(!name) return alert("Wähle einen Begleiter!");
-    const url = window.location.href.split('?')[0] + "?user=" + encodeURIComponent(name);
+    const n = document.getElementById("companionSelect").value;
+    if(!n) return alert("Name wählen!");
+    const url = window.location.href.split('?')[0] + "?user=" + encodeURIComponent(n);
     navigator.clipboard.writeText(url).then(() => alert("Link kopiert!"));
 }
 function logout() { window.location.href = window.location.pathname; }
