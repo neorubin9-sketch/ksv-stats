@@ -32,8 +32,11 @@
   .ticker-card { background: var(--card); border: 2px solid #60a5fa; border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: center; }
   .ticker-val { font-size: 2.5rem; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
   
+  /* STATS BAR - Platzhalter hinzugefügt */
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
   .stat-mini { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
+  .stat-mini span { display: block; font-size: 0.75rem; color: var(--text-dim); }
+  .stat-mini b { display: block; font-size: 1.1rem; color: #fff; margin-top: 8px; } /* Hier ist das Leerzeichen (Abstand) */
 
   .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
   @media (min-width: 1200px) { .main-grid { grid-template-columns: 1.8fr 1.2fr; } }
@@ -126,6 +129,7 @@
 </div>
 
 <script>
+// (Der JavaScript-Teil bleibt identisch wie in der vorherigen Version)
 const ADMIN_PASSWORD = "KSV"; 
 const NPOINT_ID = "15abfbbebe2742f743b2"; 
 const DB_URL = `https://api.npoint.io/${NPOINT_ID}`;
@@ -223,7 +227,6 @@ function render() {
     const playedPast = data.filter(d => d.played);
     const userHistory = playedPast.filter(m => m.begleiter.includes(filters.companion || "---"));
     
-    // Ticker
     if (userHistory.length > 0) {
         const lastVisit = userHistory[0].fD;
         if(tickerInterval) clearInterval(tickerInterval);
@@ -244,7 +247,6 @@ function render() {
         
         if(filters.companion && !isFuture && !isUserConf) return "";
 
-        // DEADLINE BERECHNUNG
         let deadlineDate = new Date(m.fD);
         deadlineDate.setDate(deadlineDate.getDate() - (m.ort === 'A' ? 7 : 3));
         const isExpired = now > deadlineDate;
