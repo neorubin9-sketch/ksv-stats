@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
 <title>KSV – Live Manager Pro</title>
 <style>
+  /* ... (Alle Styles bleiben exakt gleich wie im vorherigen Code) ... */
   :root{ 
     --blue:#003f8c; --red:#e30613; --bg:#0f172a; --card:#1e293b; 
     --border:#334155; --text:#f8fafc; --text-dim:#94a3b8;
@@ -13,48 +14,33 @@
   *{box-sizing:border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent;}
   body{ margin:0; padding:10px; background: var(--bg); color:var(--text); line-height: 1.5; }
   .container { max-width: 1650px; margin: 0 auto; display: none; } 
-
-  /* Messenger */
-  .msg-center { 
-    background: var(--card); border: 1px solid var(--blue); border-radius: 20px; 
-    padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  }
+  .msg-center { background: var(--card); border: 1px solid var(--blue); border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
   .msg-list { max-height: 150px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
   .msg-item { padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; border-left: 4px solid var(--blue); background: rgba(255,255,255,0.03); }
   .msg-item.broadcast { border-left-color: var(--amber); }
   .msg-input-group { display: flex; gap: 10px; flex-wrap: wrap; }
   .msg-input { flex: 1; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; }
-
-  /* Header & Panel */
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
   .admin-panel { background: rgba(96, 165, 250, 0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--blue); margin-bottom: 20px; }
-  
   .ticker-card { background: var(--card); border: 2px solid #60a5fa; border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: center; }
   .ticker-val { font-size: 2.5rem; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
-  
-  /* STATS BAR - Platzhalter hinzugefügt */
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
   .stat-mini { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
   .stat-mini span { display: block; font-size: 0.75rem; color: var(--text-dim); }
-  .stat-mini b { display: block; font-size: 1.1rem; color: #fff; margin-top: 8px; } /* Hier ist das Leerzeichen (Abstand) */
-
+  .stat-mini b { display: block; font-size: 1.1rem; color: #fff; margin-top: 8px; }
   .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
   @media (min-width: 1200px) { .main-grid { grid-template-columns: 1.8fr 1.2fr; } }
-  
   .table-container { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid var(--border); overflow-x: auto; }
   .match-table { width:100%; border-collapse:collapse; min-width: 600px; }
   .match-table th { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; padding: 10px; border-bottom: 1px solid var(--border); }
   .match-table td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; text-align: center; }
-  
   .logo-img { width: 28px; height: 28px; object-fit: contain; vertical-align: middle; }
   .score-box { background: #0f172a; padding: 5px 0; border-radius: 8px; width: 60px; display: inline-block; font-weight: 800; border: 1px solid var(--border); }
-  
   .name-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; margin: 2px; }
   .tag-confirmed { background: var(--win); color: #000; }
   .tag-request { background: var(--amber); color: #000; }
   .deadline-info { display: block; font-size: 0.6rem; color: var(--text-dim); margin-top: 4px; font-style: italic; }
   .expired { color: var(--red) !important; font-weight: bold; }
-
   .btn-mini { border:none; border-radius:4px; padding:1px 4px; cursor:pointer; font-size: 0.6rem; font-weight: 900; }
   .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; }
   .btn-zusage { background: var(--blue); color: #fff; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; width: 100%; }
@@ -79,7 +65,6 @@
     </div>
     <button class="btn-action" style="background:var(--red)" onclick="logout()">LOGOUT</button>
   </div>
-
   <div class="msg-center" id="msgCenter">
       <h3 style="margin:0 0 10px 0; font-size: 1rem; color: #60a5fa;">💬 NACHRICHTEN</h3>
       <div class="msg-list" id="msgList"></div>
@@ -89,7 +74,6 @@
           <button class="btn-action" onclick="sendMessage()">SENDEN</button>
       </div>
   </div>
-
   <div class="admin-panel" id="adminTools">
     <div style="display:flex; gap:10px; flex-wrap: wrap;">
         <select id="companionSelect" style="flex:1"></select>
@@ -97,19 +81,16 @@
         <button class="btn-action" style="background:var(--red);" onclick="clearCloud()">RESET CLOUD</button>
     </div>
   </div>
-
   <div class="ticker-card">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
     <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Abwesenheit vom Stadion</div>
   </div>
-
   <div class="stats-bar">
     <div class="stat-mini"><span>Besuche</span><b id="statCount">-</b></div>
     <div class="stat-mini"><span>Status</span><b id="statStatus">Aktiv</b></div>
     <div class="stat-mini"><span>Zukünftig</span><b id="statTotal">-</b></div>
     <div class="stat-mini"><span>Zuletzt vor</span><b id="statDays">-</b></div>
   </div>
-
   <div class="main-grid">
     <div class="table-container">
       <h3>📅 SPIELPLAN</h3>
@@ -129,12 +110,36 @@
 </div>
 
 <script>
-// (Der JavaScript-Teil bleibt identisch wie in der vorherigen Version)
-const ADMIN_PASSWORD = "KSV"; 
+// Sicherheit: Das Passwort "KSV" als SHA-256 Hash gespeichert
+const ADMIN_HASH = "80f84501a359739070381373516422d369f688034d6f6e52003c200676450f3b"; 
 const NPOINT_ID = "15abfbbebe2742f743b2"; 
 const DB_URL = `https://api.npoint.io/${NPOINT_ID}`;
 
 let data = [], CloudDB = { zusagen: [], msgs: [] }, filters = {companion: null}, tickerInterval = null, isAdminMode = false;
+
+// Passwort-Checker mit Verschlüsselung
+async function checkLogin() {
+    const input = document.getElementById("passInput").value;
+    const inputHash = await sha256(input);
+    
+    if(inputHash === ADMIN_HASH) {
+        isAdminMode = true;
+        document.getElementById("msgTarget").style.display = "block";
+        showApp(true);
+    } else {
+        alert("Passwort falsch!");
+    }
+}
+
+// Hilfsfunktion zum Berechnen des Hashes
+async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);                    
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// --- (Ab hier bleibt der Rest der Logik identisch) ---
 
 window.onload = async () => {
     const params = new URLSearchParams(window.location.search);
@@ -145,14 +150,6 @@ window.onload = async () => {
         showApp(false); 
     }
 };
-
-function checkLogin() {
-    if(document.getElementById("passInput").value === ADMIN_PASSWORD) {
-        isAdminMode = true;
-        document.getElementById("msgTarget").style.display = "block";
-        showApp(true);
-    } else alert("Falsch!");
-}
 
 async function showApp(isAdmin) {
     document.getElementById("loginOverlay").style.display = "none";
