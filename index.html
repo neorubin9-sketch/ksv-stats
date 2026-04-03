@@ -179,31 +179,49 @@ async function handleAuth() {
     const params = new URLSearchParams(window.location.search);
     const isViewMode = params.get('mode') === 'view';
 
-    // 1. ADMIN-LOGIN (Nur Hauptseite)
+    // 1. ADMIN-LOGIN (Nur Hauptseite ohne ID)
     if(!filters.companion && pwHash === targetAdminHash) { 
         if(!CloudDB.adminHash) { CloudDB.adminHash = pwHash; await saveToCloud(); }
-        showApp(true); return; 
+        showApp(true); 
+        return; 
     }
 
-    // 2. BEGLEITER-LOGIN
+    // 2. BEGLEITER-LOGIN / REGISTRIERUNG
     if(filters.companion) {
-        // VIEW-MODUS Ausnahme für dich
-        if(isViewMode && pwHash === targetAdminHash) { showApp(false); return; }
+        // VIEW-MODUS für dich als Admin
+        if(isViewMode && pwHash === targetAdminHash) {
+             showApp(false); 
+             return;
+        }
 
-        if(!CloudDB.users[filters.companion]) {
-            if(pwHash === targetAdminHash) { alert("Admin-Passwort hier blockiert. Wähle ein eigenes!"); return; }
+        // FALL A: User hat noch KEIN Passwort (Ersteinrichtung)
+        if(!CloudDB.users || !CloudDB.users[filters.companion]) {
+            // Sicherheit: Darf nicht das Admin-Passwort wählen
+            if(pwHash === targetAdminHash) {
+                alert("Dieses Passwort ist reserviert. Bitte wähle ein eigenes!");
+                return;
+            }
+            // Passwort wird jetzt zum ersten Mal gesetzt
             CloudDB.users[filters.companion] = pwHash;
+            CloudDB.lastSeen[filters.companion] = Date.now();
+            await saveToCloud();
+            alert("Passwort erfolgreich für " + filters.companion + " gespeichert!");
+            showApp(false);
+            return;
+        }
+
+        // FALL B: User HAT bereits ein Passwort (Normaler Login)
+        if(CloudDB.users[filters.companion] === pwHash) {
             CloudDB.lastSeen[filters.companion] = Date.now();
             await saveToCloud();
             showApp(false);
         } else {
-            if(CloudDB.users[filters.companion] === pwHash) {
-                CloudDB.lastSeen[filters.companion] = Date.now();
-                await saveToCloud();
-                showApp(false);
-            } else { alert("Falsches Passwort!"); }
+            alert("Falsches Passwort für diesen Account!");
         }
-    } else { alert("Zugriff verweigert."); }
+    } else {
+        // Dieser Fall tritt ein, wenn jemand ohne ID und mit falschem Passwort versucht zu loggen
+        alert("Zugriff verweigert. Bitte nutze deinen persönlichen Link!");
+    }
 }
 
 async function showApp(isAdmin) {
