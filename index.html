@@ -37,7 +37,6 @@
   .match-table th { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; padding: 10px; border-bottom: 1px solid var(--border); }
   .match-table td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; text-align: center; }
   
-  .logo-img { width: 28px; height: 28px; object-fit: contain; }
   .score-box { background: #0f172a; padding: 5px 0; border-radius: 8px; width: 65px; display: inline-block; font-weight: 800; border: 1px solid var(--border); }
   
   .name-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
@@ -45,11 +44,11 @@
   .tag-confirmed { background: var(--win); color: #000; }
   .tag-request { background: var(--amber); color: #000; font-style: italic; }
   
-  .st-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .st-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
   .st-on { background: var(--win); }
-  .st-off { background: var(--red); }
-  .btn-zusage { background: var(--win); color: #000; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 900; font-size: 0.65rem; cursor: pointer; width: 100%; }
-  .future-row { background: rgba(255,255,255,0.02); }
+  .btn-zusage { background: var(--blue); color: #fff; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 800; font-size: 0.7rem; cursor: pointer; width: 100%; transition: 0.2s; }
+  .btn-zusage:hover { transform: scale(1.05); background: #0056b3; }
+  .future-row { background: rgba(96, 165, 250, 0.03); }
 </style>
 </head>
 <body>
@@ -59,7 +58,6 @@
         <h2 style="margin-bottom:20px;">KSV Dashboard</h2>
         <input type="password" id="passInput" placeholder="Admin Passwort...">
         <button class="btn-action" onclick="checkLogin()">ADMIN LOGIN</button>
-        <p style="color:var(--text-dim); font-size: 0.7rem; margin-top: 20px;">Begleiter nutzen bitte ihren persönlichen Link.</p>
     </div>
 </div>
 
@@ -76,34 +74,34 @@
     <div style="display:flex; gap:10px; flex-wrap: wrap;">
         <select id="companionSelect" style="margin:0; flex:1; min-width: 200px;"></select>
         <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
-        <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET CLOUD</button>
+        <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET REQUESTS</button>
     </div>
   </div>
 
   <div class="ticker-card">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div id="tickerLabel" style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Abwesenheit vom Stadion</div>
+    <div id="tickerLabel" style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Seit deinem letzten Stadionbesuch</div>
   </div>
 
   <div class="stats-bar">
-    <div class="stat-mini"><span>Spiele gesamt</span><b id="statCount">-</b></div>
-    <div class="stat-mini"><span>Zuletzt vor</span><b id="statLast">-</b></div>
+    <div class="stat-mini"><span>Besuchte Spiele</span><b id="statCount">-</b></div>
     <div class="stat-mini"><span>Status</span><b id="statStatus">Aktiv</b></div>
-    <div class="stat-mini"><span>Saison</span><b>23/24</b></div>
+    <div class="stat-mini"><span>Gesehen</span><b id="statSeen">0</b></div>
+    <div class="stat-mini"><span>Längste Pause</span><b id="statMax">-</b></div>
   </div>
 
   <div class="main-grid">
     <div class="table-container">
-      <h3 id="tableTitle">📅 SPIELPLAN</h3>
+      <h3>📅 SPIELPLAN</h3>
       <table class="match-table" id="matchTable">
         <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Status / Aktion</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
     <div class="table-container" id="companionSection">
-        <h3>👤 BEGLEITER-STATS (Global)</h3>
+        <h3>👤 BEGLEITER-RANKING</h3>
         <table id="companionTable" style="width:100%; border-collapse:collapse;">
-          <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>NAME</th><th>SPIELE</th><th>LÜCKE</th></tr></thead>
+          <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>NAME</th><th>SPIELE</th><th>ZULETZT</th></tr></thead>
           <tbody></tbody>
         </table>
     </div>
@@ -122,7 +120,7 @@ window.onload = async () => {
     const user = params.get('user');
     if(user) { 
         filters.companion = decodeURIComponent(user); 
-        document.getElementById("viewTitle").innerText = "Hallo, " + filters.companion + "!";
+        document.getElementById("viewTitle").innerText = "Moin, " + filters.companion + "!";
         showApp(false); 
     }
 };
@@ -158,9 +156,9 @@ async function refreshData() {
             gegner: r["Gegner"], 
             meinVerein: r["Mein Verein"],
             ort: (r["Ort"] || "H").toUpperCase(),
-            tK: r["Tore Kiel"] || 0, 
-            tG: r["Tore Gegner"] || 0,
-            played: (r["Tore Kiel"] !== undefined && r["Tore Kiel"] !== "" && r["Tore Kiel"] !== "-:-"),
+            tK: r["Tore Kiel"] || "", 
+            tG: r["Tore Gegner"] || "",
+            played: r["Status"] === "Abgeschlossen",
             begleiter: (r["Begleiter"] || "").trim()
         }));
         
@@ -171,26 +169,31 @@ async function refreshData() {
     }
 }
 
+// Angepasst für dein Format "Sun, 30/07/2017"
 function parseFixDate(dStr, tStr) {
     if (!dStr) return new Date();
-    let clean = dStr.replace(/^[a-zA-Z]{2,3},\s/, '').trim();
-    const parts = clean.split(/[./]/);
-    let dO = parts.length === 3 ? new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0])) : new Date(clean);
-    if (tStr && tStr.includes(':')) { 
-        const tp = tStr.split(':'); 
-        dO.setHours(tp[0], tp[1], 0, 0); 
+    // Entferne Wochentag (z.B. "Sun, ")
+    let clean = dStr.includes(',') ? dStr.split(',')[1].trim() : dStr.trim();
+    const parts = clean.split('/');
+    if (parts.length === 3) {
+        let dO = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+        if (tStr) {
+            const tp = tStr.replace(' Uhr', '').split(':');
+            if(tp.length >= 2) dO.setHours(tp[0], tp[1]);
+        }
+        return dO;
     }
-    return dO;
+    return new Date();
 }
 
 function render() {
     const now = new Date();
     data.sort((a,b) => b.fD - a.fD);
     
-    const playedPast = data.filter(d => d.played && d.fD <= now);
-    
-    // Ticker Berechnung (Letztes Spiel des aktuellen Users)
+    const playedPast = data.filter(d => d.played);
     const userHistory = playedPast.filter(m => m.begleiter.includes(filters.companion || "---"));
+    
+    // Ticker Update
     if (userHistory.length > 0) {
         userHistory.sort((a,b) => a.fD - b.fD);
         const lastVisit = userHistory[userHistory.length-1].fD;
@@ -200,20 +203,16 @@ function render() {
             const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
             document.getElementById("liveTicker").innerText = `${d}t ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
         }, 1000);
-        document.getElementById("statLast").innerText = Math.floor((now - lastVisit)/86400000) + " Tage";
     }
 
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
-        const isFuture = m.fD > now;
+        const isFuture = !m.played;
         const confirmedList = m.begleiter ? m.begleiter.split(/,| und /).map(n => n.trim()) : [];
         const isUserConfirmed = confirmedList.includes(filters.companion || "");
         const requests = ZusagenCloud.filter(z => z.date === m.datum).map(z => z.user);
         const hasRequested = requests.includes(filters.companion);
 
-        // FILTER LOGIK: 
-        // 1. Vergangene Spiele: Nur anzeigen, wenn der User dabei war (oder Admin-Ansicht)
-        // 2. Zukünftige Spiele: IMMER anzeigen
         if(filters.companion && !isFuture && !isUserConfirmed) return "";
 
         let actionHtml = "";
@@ -227,11 +226,10 @@ function render() {
                     actionHtml = `<button class="btn-zusage" onclick="submitZusage('${m.datum}')">DABEI!</button>`;
                 }
             } else {
-                actionHtml = isUserConfirmed ? '<span class="st-dot st-on"></span> Dabeigewesen' : '';
+                actionHtml = '<span class="st-dot st-on"></span> Dabeigewesen';
             }
         } else {
-            // Admin Ansicht
-            let tags = confirmedList.map(n => n ? `<span class="name-tag tag-confirmed">${n}</span>` : "").join("");
+            let tags = confirmedList.filter(n => n && n.toLowerCase() !== 'nicht im stadion').map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("");
             let reqs = requests.filter(n => !confirmedList.includes(n)).map(n => `<span class="name-tag tag-request">? ${n}</span>`).join("");
             actionHtml = `<div class="name-container">${tags}${reqs}</div>`;
         }
@@ -246,13 +244,12 @@ function render() {
         </tr>`;
     }).join("");
 
-    // Statistiken & Dropdown (nur Admin)
     if(!filters.companion) {
         const comps = {};
         data.forEach(m => {
-            if(m.begleiter) {
+            if(m.begleiter && m.begleiter.toLowerCase() !== "nicht im stadion") {
                 m.begleiter.split(/,| und /).forEach(n => {
-                    const name = n.trim(); if(!name || name.toLowerCase() === "nicht im stadion") return;
+                    const name = n.trim(); if(!name) return;
                     if(!comps[name]) comps[name] = {sp: 0, last: null};
                     if(m.played) {
                         comps[name].sp++; 
@@ -261,15 +258,11 @@ function render() {
                 });
             }
         });
-
         document.getElementById("companionSelect").innerHTML = '<option value="">Name wählen...</option>' + 
             Object.keys(comps).sort().map(n => `<option value="${n}">${n}</option>`).join("");
-
         document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps)
-            .sort((a,b)=>b[1].sp - a[1].sp)
-            .map(([n, s]) => `
+            .sort((a,b)=>b[1].sp - a[1].sp).map(([n, s]) => `
             <tr><td style="padding:10px; text-align:left;"><b>${n}</b></td><td>${s.sp}x</td><td style="color:var(--red)">${s.last ? Math.floor((now-s.last)/86400000)+'T.' : '-'}</td></tr>`).join("");
-        
         document.getElementById("statCount").innerText = playedPast.length;
     } else {
         document.getElementById("statCount").innerText = userHistory.length;
@@ -278,15 +271,13 @@ function render() {
 
 async function submitZusage(datum) {
     if(!filters.companion) return;
-    if(!confirm("Möchtest du dich für das Spiel am " + datum + " anmelden?")) return;
-    
     ZusagenCloud.push({ user: filters.companion, date: datum });
     await fetch(DB_URL, { 
         method: 'POST', 
         headers: {'Content-Type': 'application/json'}, 
         body: JSON.stringify({ zusagen: ZusagenCloud }) 
     });
-    alert("Anfrage gesendet!"); 
+    alert("Anfrage für " + datum + " gesendet!"); 
     refreshData();
 }
 
