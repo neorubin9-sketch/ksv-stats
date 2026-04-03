@@ -14,32 +14,44 @@
   body{ margin:0; padding:10px; background: var(--bg); color:var(--text); line-height: 1.5; }
   .container { max-width: 1650px; margin: 0 auto; display: none; } 
 
+  /* Login & Overlays */
   #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
   .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
   input[type="password"], input[type="text"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; text-align: center; }
   .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
   
+  /* Header */
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
-  .admin-panel { background: rgba(96, 165, 250, 0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--blue); margin-bottom: 20px; }
-  .msg-center { background: var(--card); border: 1px solid var(--blue); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
-  .msg-list { max-height: 150px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
-  .msg-item { padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; border-left: 4px solid var(--blue); background: rgba(255,255,255,0.03); }
+  
+  /* NEUES POSTFACH DESIGN */
+  .msg-center { background: var(--card); border: 1px solid var(--blue); border-radius: 20px; padding: 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; }
+  .msg-layout { display: grid; grid-template-columns: 200px 1fr; gap: 15px; min-height: 300px; }
+  @media (max-width: 768px) { .msg-layout { grid-template-columns: 1fr; } }
+  
+  .msg-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 5px; overflow-y: auto; max-height: 400px; }
+  .chat-tab { padding: 10px; border-radius: 10px; cursor: pointer; background: rgba(255,255,255,0.03); font-size: 0.85rem; border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; }
+  .chat-tab.active { background: var(--blue); border-color: #60a5fa; }
+  .unread-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; }
 
+  .msg-content { display: flex; flex-direction: column; background: rgba(0,0,0,0.2); border-radius: 15px; padding: 15px; }
+  .msg-list { flex: 1; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; padding-right: 5px; }
+  
+  .msg-bubble { max-width: 85%; padding: 10px 15px; border-radius: 15px; font-size: 0.85rem; position: relative; }
+  .msg-bubble.admin { align-self: flex-end; background: var(--blue); border-bottom-right-radius: 2px; }
+  .msg-bubble.user { align-self: flex-start; background: var(--border); border-bottom-left-radius: 2px; }
+  .msg-meta { font-size: 0.65rem; color: var(--text-dim); margin-top: 5px; display: block; text-align: right; }
+
+  /* Restliches Layout */
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
   .stat-mini { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
-  .stat-mini span { display: block; font-size: 0.75rem; color: var(--text-dim); }
   .stat-mini b { display: block; font-size: 1.1rem; color: #fff; margin-top: 10px; }
 
-  .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-  @media (min-width: 1200px) { .main-grid { grid-template-columns: 1.8fr 1.2fr; } }
   .table-container { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid var(--border); overflow-x: auto; }
   .match-table { width:100%; border-collapse:collapse; min-width: 600px; }
   .match-table td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
   
   .name-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-flex; margin: 2px; }
   .tag-confirmed { background: var(--win); color: #000; }
-  .tag-registered { background: var(--win); color: #000; font-size: 0.6rem; }
-  .tag-pending { background: var(--border); color: var(--text-dim); font-size: 0.6rem; }
   .ticker-val { font-size: 2.5rem; font-weight: 900; color: #fff; text-align: center; margin-bottom: 10px; }
 </style>
 </head>
@@ -48,8 +60,8 @@
 <div id="loginOverlay">
     <div class="login-box">
         <h2 id="loginTitle">KSV Dashboard</h2>
-        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Wird geladen...</p>
-        <input type="password" id="passInput" placeholder="Passwort eingeben...">
+        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Initialisierung...</p>
+        <input type="password" id="passInput" placeholder="Passwort...">
         <button class="btn-action" onclick="handleAuth()">LOGIN</button>
     </div>
 </div>
@@ -64,12 +76,19 @@
   </div>
 
   <div class="msg-center">
-      <h3 style="margin:0 0 10px 0; font-size: 1rem; color: #60a5fa;">💬 NACHRICHTEN</h3>
-      <div class="msg-list" id="msgList"></div>
-      <div class="msg-input-group" style="display:flex; gap:10px;">
-          <select id="msgTarget" style="display:none; margin:0; width:120px; background:var(--bg); color:white; border-radius:8px;"></select>
-          <input type="text" id="msgInput" style="flex:1; background:var(--bg); border:1px solid var(--border); color:white; padding:10px; border-radius:8px;" placeholder="Nachricht...">
-          <button class="btn-action" style="width:auto;" onclick="sendMessage()">SENDEN</button>
+      <h3 style="margin:0; font-size: 1rem; color: #60a5fa;">💬 POSTFACH</h3>
+      <div class="msg-layout">
+          <div class="msg-sidebar" id="chatSidebar">
+              </div>
+          <div class="msg-content">
+              <div class="msg-list" id="msgList">
+                  <p style="color:var(--text-dim); text-align:center;">Wähle einen Chat aus...</p>
+              </div>
+              <div style="display:flex; gap:10px;">
+                  <input type="text" id="msgInput" style="flex:1; margin:0;" placeholder="Nachricht schreiben...">
+                  <button class="btn-action" style="width:auto;" onclick="sendMessage()">SENDEN</button>
+              </div>
+          </div>
       </div>
   </div>
 
@@ -83,7 +102,6 @@
 
   <div class="ticker-card" style="background: var(--card); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border);">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase; text-align:center;">Abwesenheit vom Stadion</div>
   </div>
 
   <div class="stats-bar">
@@ -102,20 +120,8 @@
   </div>
   
   <div id="adminSections" style="display:none; margin-top:20px; display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-    <div class="table-container">
-        <h3>👤 RANKING</h3>
-        <table id="companionTable" style="width:100%; border-collapse:collapse;">
-          <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>NAME</th><th>SPIELE</th><th>ZULETZT</th></tr></thead>
-          <tbody></tbody>
-        </table>
-    </div>
-    <div class="table-container" style="border: 1px solid var(--blue);">
-        <h3 style="color:#60a5fa">🔑 USER-STATUS</h3>
-        <table id="userTable" style="width:100%; border-collapse:collapse;">
-            <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>BEGLEITER</th><th>ID-LINK</th><th>AKTION</th></tr></thead>
-            <tbody></tbody>
-        </table>
-    </div>
+    <div class="table-container"><h3>👤 RANKING</h3><table id="companionTable" style="width:100%;"><thead><tr><th>NAME</th><th>SPIELE</th></tr></thead><tbody></tbody></table></div>
+    <div class="table-container"><h3>🔑 USER-STATUS</h3><table id="userTable" style="width:100%;"><thead><tr><th>BEGLEITER</th><th>ID-LINK</th></tr></thead><tbody></tbody></table></div>
   </div>
 </div>
 
@@ -124,7 +130,7 @@ const FALLBACK_ADMIN_HASH = "80f84501a359739070381373516422d369f688034d6f6e52003
 const NPOINT_ID = "15abfbbebe2742f743b2"; 
 const DB_URL = `https://api.npoint.io/${NPOINT_ID}`;
 
-let data = [], CloudDB = { zusagen: [], msgs: [], users: {}, adminHash: null, userIds: {} }, filters = {companion: null}, isAdminMode = false;
+let data = [], CloudDB = { zusagen: [], msgs: [], users: {}, adminHash: null, userIds: {} }, filters = {companion: null}, isAdminMode = false, activeChat = "Alle";
 
 window.onload = async () => {
     await refreshData();
@@ -133,11 +139,10 @@ window.onload = async () => {
 
     if(id && CloudDB.userIds[id]) {
         filters.companion = CloudDB.userIds[id];
+        activeChat = "Admin";
         document.getElementById("loginTitle").innerText = "Moin, " + filters.companion;
-        document.getElementById("loginDesc").innerText = CloudDB.users[filters.companion] ? "Bitte dein Passwort eingeben." : "Noch kein Passwort gesetzt. Lege jetzt eines fest:";
     } else {
         document.getElementById("loginTitle").innerText = "KSV Admin";
-        document.getElementById("loginDesc").innerText = CloudDB.adminHash ? "Bitte Master-Passwort eingeben." : "System-Einrichtung: Lege jetzt dein Master-Passwort fest:";
     }
 };
 
@@ -149,31 +154,15 @@ async function hash(str) {
 
 async function handleAuth() {
     const pw = document.getElementById("passInput").value;
-    if(!pw) return alert("Eingabe fehlt!");
+    if(!pw) return alert("Passwort fehlt!");
     const pwHash = await hash(pw);
-
     const targetAdminHash = CloudDB.adminHash || FALLBACK_ADMIN_HASH;
-    if(pwHash === targetAdminHash) {
-        showApp(true);
-        return;
-    }
 
-    if(filters.companion) {
-        if(!CloudDB.users[filters.companion]) {
-            CloudDB.users[filters.companion] = pwHash;
-            await saveToCloud();
-            alert("Passwort für " + filters.companion + " gesetzt!");
-            showApp(false);
-        } else {
-            if(CloudDB.users[filters.companion] === pwHash) {
-                showApp(false);
-            } else {
-                alert("Falsches Passwort!");
-            }
-        }
-    } else {
-        alert("Falsches Passwort oder ungültiger Link!");
-    }
+    if(pwHash === targetAdminHash) { showApp(true); return; }
+    if(filters.companion && (!CloudDB.users[filters.companion] || CloudDB.users[filters.companion] === pwHash)) {
+        if(!CloudDB.users[filters.companion]) { CloudDB.users[filters.companion] = pwHash; await saveToCloud(); }
+        showApp(false);
+    } else { alert("Falsches Passwort!"); }
 }
 
 async function showApp(isAdmin) {
@@ -183,9 +172,6 @@ async function showApp(isAdmin) {
     if(isAdmin) {
         document.getElementById("adminTools").style.display = "block";
         document.getElementById("adminSections").style.display = "grid";
-        document.getElementById("msgTarget").style.display = "block";
-    } else {
-        document.getElementById("viewTitle").innerText = "Moin, " + filters.companion;
     }
     render();
     renderMessages();
@@ -196,16 +182,11 @@ async function refreshData() {
         const [resExcel, resCloud] = await Promise.all([fetch('daten.json?v=' + Date.now()), fetch(DB_URL)]);
         const excelJson = await resExcel.json();
         CloudDB = await resCloud.json();
-        if(!CloudDB.users) CloudDB.users = {};
-        if(!CloudDB.userIds) CloudDB.userIds = {};
-        if(!CloudDB.zusagen) CloudDB.zusagen = [];
         if(!CloudDB.msgs) CloudDB.msgs = [];
-
         data = excelJson.map(r => ({
             fD: parseFixDate(r["Datum"] || r["datum"], r["Uhrzeit"] || r["uhrzeit"]),
             datum: r["Datum"] || r["datum"], gegner: r["Gegner"], meinVerein: r["Mein Verein"],
-            ort: (r["Ort"] || "H").toUpperCase(), tK: r["Tore Kiel"] || "", tG: r["Tore Gegner"] || "",
-            played: r["Status"] === "Abgeschlossen", begleiter: (r["Begleiter"] || "").trim()
+            ort: (r["Ort"] || "H").toUpperCase(), played: r["Status"] === "Abgeschlossen", begleiter: (r["Begleiter"] || "").trim()
         }));
     } catch(e) { console.error(e); }
 }
@@ -218,6 +199,80 @@ function parseFixDate(d, t) {
     return dO;
 }
 
+// --- MESSENGER LOGIK ---
+function renderMessages() {
+    const sidebar = document.getElementById("chatSidebar");
+    const list = document.getElementById("msgList");
+    sidebar.innerHTML = "";
+
+    if (isAdminMode) {
+        // Sidebar für Admin: Alle Begleiter auflisten
+        const usersInChat = [...new Set(Object.values(CloudDB.userIds))].sort();
+        usersInChat.unshift("Alle");
+
+        usersInChat.forEach(u => {
+            const hasUnread = CloudDB.msgs.some(m => m.from === u && !m.read);
+            const div = document.createElement("div");
+            div.className = `chat-tab ${activeChat === u ? 'active' : ''}`;
+            div.innerHTML = `<span>${u}</span> ${hasUnread ? '<div class="unread-dot"></div>' : ''}`;
+            div.onclick = () => { activeChat = u; markAsRead(u); renderMessages(); };
+            sidebar.appendChild(div);
+        });
+    } else {
+        // Sidebar für Begleiter: Nur Admin Tab
+        sidebar.innerHTML = `<div class="chat-tab active">Admin</div>`;
+    }
+
+    // Nachrichten filtern
+    let chatPartner = isAdminMode ? activeChat : filters.companion;
+    let filtered = CloudDB.msgs.filter(m => {
+        if(isAdminMode) {
+            return (m.from.startsWith(activeChat) || m.to === activeChat);
+        } else {
+            return (m.from.startsWith(filters.companion) || m.to === filters.companion || m.to === "Alle");
+        }
+    });
+
+    list.innerHTML = filtered.length ? filtered.map(m => {
+        const isMe = isAdminMode ? m.from.startsWith("Admin") : m.from.startsWith(filters.companion);
+        return `<div class="msg-bubble ${isMe ? 'admin' : 'user'}">
+            <div style="font-weight:bold; font-size:0.7rem; margin-bottom:3px;">${m.from}</div>
+            ${m.txt}
+            <span class="msg-meta">${m.time}</span>
+        </div>`;
+    }).join("") : `<p style="color:var(--text-dim); text-align:center;">Keine Nachrichten in ${activeChat}</p>`;
+    list.scrollTop = list.scrollHeight;
+}
+
+async function sendMessage() {
+    const input = document.getElementById("msgInput");
+    if(!input.value) return;
+
+    const now = new Date();
+    const timeStr = now.toLocaleDateString('de-DE') + " " + now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
+    
+    let senderLabel = isAdminMode ? `Admin < ${activeChat}` : `${filters.companion} < Admin`;
+
+    CloudDB.msgs.push({ 
+        from: senderLabel, 
+        to: isAdminMode ? activeChat : "Admin", 
+        txt: input.value, 
+        time: timeStr,
+        read: false
+    });
+
+    await saveToCloud();
+    input.value = "";
+    renderMessages();
+}
+
+async function markAsRead(user) {
+    let changed = false;
+    CloudDB.msgs.forEach(m => { if(m.from === user && !m.read) { m.read = true; changed = true; } });
+    if(changed) await saveToCloud();
+}
+
+// --- REST RENDERING ---
 function render() {
     const now = new Date();
     data.sort((a,b) => b.fD - a.fD);
@@ -231,111 +286,25 @@ function render() {
             const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
             document.getElementById("liveTicker").innerText = `${d}t ${h}h ${m}m ${s}s`;
         }, 1000);
-        document.getElementById("statDays").innerText = Math.floor((now-last)/86400000) + " T.";
-    }
-
-    const comps = {};
-    data.forEach(m => { if(m.begleiter && m.played) m.begleiter.split(/,| und /).forEach(n => {
-        const name = n.trim(); if(!name || name === "nicht im stadion") return;
-        if(!comps[name]) comps[name] = {sp:0, last:null}; comps[name].sp++; comps[name].last = m.fD;
-    })});
-    const sortedComps = Object.entries(comps).sort((a,b)=>b[1].sp-a[1].sp);
-
-    if(isAdminMode) {
-        const sn = Object.keys(comps).sort();
-        document.getElementById("companionSelect").innerHTML = sn.map(n => `<option value="${n}">${n}</option>`).join("");
-        document.getElementById("msgTarget").innerHTML = '<option value="Alle">An Alle</option>' + sn.map(n => `<option value="${n}">${n}</option>`).join("");
-        document.getElementById("userTable").querySelector("tbody").innerHTML = sn.map(u => {
-            let existingId = Object.keys(CloudDB.userIds).find(key => CloudDB.userIds[key] === u);
-            return `<tr><td style="text-align:left; padding:8px;"><b>${u}</b></td><td><span style="font-size:9px; color:var(--text-dim)">${existingId || 'Kein Link'}</span></td><td><button onclick="resetPW('${u}')" style="background:var(--red); color:white; border:none; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td></tr>`;
-        }).join("");
     }
 
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
         const isFuture = !m.played && m.fD > now;
-        const conf = m.begleiter.split(/,| und /).map(n => n.trim()).filter(n => n && n !== 'nicht im stadion');
-        if(filters.companion && !isFuture && !conf.includes(filters.companion)) return "";
-        const h = m.ort==='H'?m.meinVerein:m.gegner; const g = m.ort==='A'?m.meinVerein:m.gegner;
-        
-        let action = "";
-        if(filters.companion && isFuture) {
-            const hasReq = CloudDB.zusagen.some(z => z.date === m.datum && z.user === filters.companion);
-            if(conf.includes(filters.companion)) action = '<span class="name-tag tag-confirmed">BESTÄTIGT</span>';
-            else if(hasReq) action = '<span class="name-tag tag-request">ANGEFRAGT...</span>';
-            else action = `<button class="btn-action" style="padding:5px 10px; font-size:0.7rem;" onclick="submitZusage('${m.datum}')">DABEI!</button>`;
-        } else if(isAdminMode) {
-            const reqs = CloudDB.zusagen.filter(z => z.date === m.datum).map(z => z.user);
-            action = conf.map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("") + reqs.map(n => `<span class="name-tag tag-request">? ${n} <button onclick="handleReq('${m.datum}','${n}')" style="cursor:pointer">✔</button></span>`).join("");
-        }
-        return `<tr><td>${m.datum}</td><td>${m.ort}</td><td style="text-align:right">${h}</td><td>${m.played?m.tK+':'+m.tG:'-:-'}</td><td style="text-align:left">${g}</td><td>${action}</td></tr>`;
+        if(filters.companion && !isFuture && !m.begleiter.includes(filters.companion)) return "";
+        return `<tr><td>${m.datum}</td><td>${m.ort}</td><td>${m.gegner}</td><td>-:-</td><td>${isFuture ? 'ZUKUNFT' : ''}</td></tr>`;
     }).join("");
-    
-    document.getElementById("companionTable").querySelector("tbody").innerHTML = sortedComps.map(([n,s])=>`<tr><td>${n}</td><td>${s.sp}x</td><td>${Math.floor((now-s.last)/86400000)}T.</td></tr>`).join("");
-    document.getElementById("statCount").innerText = playedPast.length;
-}
-
-// --- MESSENGER FUNKTIONEN ---
-function renderMessages() {
-    const list = document.getElementById("msgList");
-    if(!CloudDB.msgs) CloudDB.msgs = [];
-    let vis = isAdminMode ? CloudDB.msgs : CloudDB.msgs.filter(m => m.to === "Alle" || m.to === filters.companion || m.from === filters.companion);
-    list.innerHTML = vis.length ? vis.reverse().map(m => `<div class="msg-item"><b>${m.from}:</b> ${m.txt}</div>`).join("") : "Keine Nachrichten.";
-}
-
-async function sendMessage() {
-    const txt = document.getElementById("msgInput").value; if(!txt) return;
-    if(!CloudDB.msgs) CloudDB.msgs = [];
-    CloudDB.msgs.push({ 
-        from: isAdminMode ? "Admin" : filters.companion, 
-        to: isAdminMode ? document.getElementById("msgTarget").value : "Admin", 
-        txt: txt, 
-        time: new Date().toLocaleTimeString() 
-    });
-    await saveToCloud(); 
-    document.getElementById("msgInput").value = ""; 
-    renderMessages();
-}
-
-async function submitZusage(d) {
-    CloudDB.zusagen.push({ user: filters.companion, date: d });
-    await saveToCloud(); render();
-}
-
-async function handleReq(d, u) {
-    CloudDB.zusagen = CloudDB.zusagen.filter(z => !(z.date===d && z.user===u));
-    await saveToCloud(); render();
 }
 
 async function saveToCloud() { await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(CloudDB) }); }
-function generateId() { return Math.random().toString(36).substr(2, 6); }
-
+function logout() { window.location.href = window.location.pathname; }
 async function copyLink() {
     const name = document.getElementById("companionSelect").value;
-    if(!name) return alert("Wähle einen Namen!");
-    let id = Object.keys(CloudDB.userIds).find(key => CloudDB.userIds[key] === name);
-    if(!id) {
-        id = generateId();
-        CloudDB.userIds[id] = name;
-        await saveToCloud();
-        render();
-    }
-    const url = window.location.origin + window.location.pathname + "?id=" + id;
-    navigator.clipboard.writeText(url).then(() => alert("Kryptischer Link kopiert!"));
+    let id = Object.keys(CloudDB.userIds).find(key => CloudDB.userIds[key] === name) || Math.random().toString(36).substr(2, 6);
+    CloudDB.userIds[id] = name; await saveToCloud();
+    navigator.clipboard.writeText(window.location.origin + window.location.pathname + "?id=" + id);
+    alert("Link kopiert!");
 }
-
-async function resetPW(u) {
-    if(confirm(`Passwort & ID für ${u} löschen?`)) {
-        delete CloudDB.users[u];
-        let id = Object.keys(CloudDB.userIds).find(key => CloudDB.userIds[key] === u);
-        if(id) delete CloudDB.userIds[id];
-        await saveToCloud();
-        render();
-    }
-}
-
-function logout() { window.location.href = window.location.pathname; }
-async function clearCloud() { if(confirm("RESET?")) { CloudDB={zusagen:[],msgs:[],users:{}, adminHash:null, userIds:{}}; await saveToCloud(); location.reload(); } }
 </script>
 </body>
 </html>
