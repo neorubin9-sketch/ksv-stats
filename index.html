@@ -40,9 +40,9 @@
   .score-box { background: #0f172a; padding: 5px 0; border-radius: 8px; width: 65px; display: inline-block; font-weight: 800; border: 1px solid var(--border); }
   .name-tag { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px; margin: 2px; }
   .tag-confirmed { background: var(--win); color: #000; }
-  .tag-request { background: var(--amber); color: #000; font-style: italic; }
+  .tag-request { background: var(--amber); color: #000; font-style: italic; border: 1px solid rgba(0,0,0,0.1); }
   
-  .btn-mini { border:none; border-radius:4px; padding:2px 6px; cursor:pointer; font-size: 0.7rem; font-weight: 900; margin-left: 5px; }
+  .btn-mini { border:none; border-radius:4px; padding:2px 6px; cursor:pointer; font-size: 0.7rem; font-weight: 900; margin-left: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
   .btn-ok { background: #fff; color: var(--win); }
   .btn-no { background: #fff; color: var(--red); }
 
@@ -210,13 +210,12 @@ function render() {
 
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
-        // WICHTIG: Spiel ist nur Zukunft wenn Status nicht Abgeschlossen UND Datum > jetzt
         const isFuture = !m.played && m.fD > now;
-        const confirmedList = m.begleiter ? m.begleiter.split(/,| und /).map(n => n.trim()) : [];
+        const confirmedList = m.begleiter ? m.begleiter.split(/,| und /).map(n => n.trim()).filter(n => n && n.toLowerCase() !== 'nicht im stadion') : [];
         const isUserConfirmed = confirmedList.includes(filters.companion || "");
         
-        // Cloud-Anfragen filtern: Nur zeigen, wenn das Spiel wirklich in der Zukunft liegt
-        const requests = ZusagenCloud.filter(z => z.date === m.datum && isFuture).map(z => z.user);
+        // Cloud-Anfragen: Wer will kommen? (Nur für zukünftige Spiele relevant)
+        const requests = ZusagenCloud.filter(z => z.date === m.datum).map(z => z.user);
         const hasRequested = requests.includes(filters.companion);
 
         if(filters.companion && !isFuture && !isUserConfirmed) return "";
@@ -231,13 +230,17 @@ function render() {
                 actionHtml = '<span class="st-dot"></span> Dabei';
             }
         } else {
-            let tags = confirmedList.filter(n => n && n.toLowerCase() !== 'nicht im stadion').map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("");
-            let reqs = requests.filter(n => !confirmedList.includes(n)).map(n => `
+            // ADMIN ANSICHT
+            let tags = confirmedList.map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("");
+            
+            // NEU: Zeige Anfragen IMMER an, auch wenn schon jemand eingetragen ist
+            let reqs = requests.map(n => `
                 <span class="name-tag tag-request">
                     ? ${n} 
                     <button class="btn-mini btn-ok" onclick="handleAdminRequest('${m.datum}', '${n}', true)">✔</button>
                     <button class="btn-mini btn-no" onclick="handleAdminRequest('${m.datum}', '${n}', false)">✖</button>
                 </span>`).join("");
+                
             actionHtml = `<div class="name-container">${tags}${reqs}</div>`;
         }
 
@@ -273,7 +276,7 @@ function render() {
 }
 
 async function handleAdminRequest(datum, user, accept) {
-    if(accept) alert(`${user} für ${datum} akzeptiert.\n\nJETZT IN EXCEL EINTRAGEN!`);
+    if(accept) alert(`${user} für ${datum} akzeptiert.\n\nBITTE IN EXCEL EINTRAGEN!`);
     ZusagenCloud = ZusagenCloud.filter(z => !(z.date === datum && z.user === user));
     await saveToCloud();
     refreshData();
@@ -281,6 +284,9 @@ async function handleAdminRequest(datum, user, accept) {
 
 async function submitZusage(datum) {
     if(!filters.companion) return;
+    // Check ob schon angefragt
+    if(ZusagenCloud.some(z => z.date === datum && z.user === filters.companion)) return alert("Schon angefragt!");
+    
     ZusagenCloud.push({ user: filters.companion, date: datum });
     await saveToCloud();
     alert("Anfrage gesendet!"); 
@@ -296,7 +302,7 @@ async function saveToCloud() {
 }
 
 async function clearCloud() {
-    if(confirm("Alle Anfragen löschen?")) {
+    if(confirm("Alle offenen Anfragen löschen?")) {
         ZusagenCloud = [];
         await saveToCloud();
         refreshData();
