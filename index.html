@@ -14,32 +14,18 @@
   body{ margin:0; padding:10px; background: var(--bg); color:var(--text); line-height: 1.5; }
   .container { max-width: 1650px; margin: 0 auto; display: none; } 
 
-  /* Messenger / Nachrichtenzentrale */
+  /* Messenger */
   .msg-center { 
     background: var(--card); border: 1px solid var(--blue); border-radius: 20px; 
     padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   }
   .msg-list { max-height: 150px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
-  .msg-item { 
-    padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; 
-    border-left: 4px solid var(--blue); background: rgba(255,255,255,0.03);
-  }
-  .msg-item.broadcast { border-left-color: var(--amber); background: rgba(245, 158, 11, 0.05); }
-  .msg-item.admin-note { border-left-color: var(--win); }
+  .msg-item { padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; border-left: 4px solid var(--blue); background: rgba(255,255,255,0.03); }
+  .msg-item.broadcast { border-left-color: var(--amber); }
+  .msg-input-group { display: flex; gap: 10px; flex-wrap: wrap; }
+  .msg-input { flex: 1; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 8px; }
 
-  .msg-input-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-  .msg-input { 
-    flex: 1; background: var(--bg); border: 1px solid var(--border); 
-    color: white; padding: 10px; border-radius: 8px; min-width: 200px;
-  }
-
-  /* Standard Elemente */
-  #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
-  .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 350px; }
-  input[type="password"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 20px; text-align: center; }
-  .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
-  .btn-action:hover { opacity: 0.8; transform: translateY(-2px); }
-  
+  /* Header & Panel */
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
   .admin-panel { background: rgba(96, 165, 250, 0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--blue); margin-bottom: 20px; }
   
@@ -48,7 +34,6 @@
   
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
   .stat-mini { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
-  .stat-mini b { font-size: 1rem; color: #fff; }
 
   .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
   @media (min-width: 1200px) { .main-grid { grid-template-columns: 1.8fr 1.2fr; } }
@@ -64,10 +49,13 @@
   .name-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; margin: 2px; }
   .tag-confirmed { background: var(--win); color: #000; }
   .tag-request { background: var(--amber); color: #000; }
-  
+  .deadline-info { display: block; font-size: 0.6rem; color: var(--text-dim); margin-top: 4px; font-style: italic; }
+  .expired { color: var(--red) !important; font-weight: bold; }
+
   .btn-mini { border:none; border-radius:4px; padding:1px 4px; cursor:pointer; font-size: 0.6rem; font-weight: 900; }
-  .st-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--win); margin-right: 5px; }
-  .future-row { background: rgba(96, 165, 250, 0.02); }
+  .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; }
+  .btn-zusage { background: var(--blue); color: #fff; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; width: 100%; }
+  .btn-zusage:disabled { background: #334155; cursor: not-allowed; opacity: 0.5; }
 </style>
 </head>
 <body>
@@ -76,7 +64,7 @@
     <div class="login-box">
         <h2>KSV Dashboard</h2>
         <input type="password" id="passInput" placeholder="Passwort...">
-        <button class="btn-action" onclick="checkLogin()">LOGIN</button>
+        <button class="btn-action" style="width:100%" onclick="checkLogin()">LOGIN</button>
     </div>
 </div>
 
@@ -86,26 +74,24 @@
         <h2 id="viewTitle">KSV LIVE MANAGER</h2>
         <div id="statusInfo">Synchronisierung...</div>
     </div>
-    <button class="btn-action" style="width:auto; background:var(--red)" onclick="logout()">LOGOUT</button>
+    <button class="btn-action" style="background:var(--red)" onclick="logout()">LOGOUT</button>
   </div>
 
   <div class="msg-center" id="msgCenter">
-      <h3 style="margin-top:0; font-size: 1rem; color: #60a5fa;">💬 NACHRICHTEN</h3>
-      <div class="msg-list" id="msgList">
-          <div class="msg-item">Keine neuen Nachrichten vorhanden.</div>
-      </div>
+      <h3 style="margin:0 0 10px 0; font-size: 1rem; color: #60a5fa;">💬 NACHRICHTEN</h3>
+      <div class="msg-list" id="msgList"></div>
       <div class="msg-input-group">
-          <select id="msgTarget" style="margin:0; width: 120px; padding: 8px; display:none;"></select>
+          <select id="msgTarget" style="display:none; background:var(--bg); color:white; border-radius:8px; padding:5px;"></select>
           <input type="text" id="msgInput" class="msg-input" placeholder="Nachricht schreiben...">
-          <button class="btn-action" style="width:auto; padding: 10px 20px;" onclick="sendMessage()">SENDEN</button>
+          <button class="btn-action" onclick="sendMessage()">SENDEN</button>
       </div>
   </div>
 
   <div class="admin-panel" id="adminTools">
     <div style="display:flex; gap:10px; flex-wrap: wrap;">
-        <select id="companionSelect" style="margin:0; flex:1; min-width: 200px;"></select>
-        <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
-        <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET SYSTEM</button>
+        <select id="companionSelect" style="flex:1"></select>
+        <button class="btn-action" onclick="copyLink()">LINK KOPIEREN</button>
+        <button class="btn-action" style="background:var(--red);" onclick="clearCloud()">RESET CLOUD</button>
     </div>
   </div>
 
@@ -117,7 +103,7 @@
   <div class="stats-bar">
     <div class="stat-mini"><span>Besuche</span><b id="statCount">-</b></div>
     <div class="stat-mini"><span>Status</span><b id="statStatus">Aktiv</b></div>
-    <div class="stat-mini"><span>Offen</span><b id="statTotal">-</b></div>
+    <div class="stat-mini"><span>Zukünftig</span><b id="statTotal">-</b></div>
     <div class="stat-mini"><span>Zuletzt vor</span><b id="statDays">-</b></div>
   </div>
 
@@ -125,7 +111,7 @@
     <div class="table-container">
       <h3>📅 SPIELPLAN</h3>
       <table class="match-table" id="matchTable">
-        <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Status / Begleiter</th></tr></thead>
+        <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Status / Aktion</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -161,16 +147,13 @@ function checkLogin() {
         isAdminMode = true;
         document.getElementById("msgTarget").style.display = "block";
         showApp(true);
-    } else alert("Passwort falsch!");
+    } else alert("Falsch!");
 }
 
 async function showApp(isAdmin) {
     document.getElementById("loginOverlay").style.display = "none";
     document.getElementById("mainApp").style.display = "block";
-    if(!isAdmin) {
-        document.getElementById("adminTools").style.display = "none";
-        document.getElementById("companionSection").style.display = "none";
-    }
+    if(!isAdmin) document.getElementById("adminTools").style.display = "none";
     await refreshData();
 }
 
@@ -199,64 +182,36 @@ async function refreshData() {
         
         render();
         renderMessages();
-    } catch (e) { console.error("Sync Error", e); }
+    } catch (e) { console.error(e); }
 }
 
 function parseFixDate(dStr, tStr) {
     if (!dStr) return new Date();
     let clean = dStr.includes(',') ? dStr.split(',')[1].trim() : dStr.trim();
     const parts = clean.split('/');
-    if (parts.length === 3) {
-        let dO = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-        if (tStr) {
-            const tp = tStr.replace(' Uhr', '').split(':');
-            if(tp.length >= 2) dO.setHours(tp[0], tp[1], 0);
-        }
-        return dO;
+    let dO = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    if (tStr) {
+        const tp = tStr.replace(' Uhr', '').split(':');
+        if(tp.length >= 2) dO.setHours(tp[0], tp[1], 0);
     }
-    return new Date();
+    return dO;
 }
 
 function renderMessages() {
     const list = document.getElementById("msgList");
-    let visibleMsgs = [];
-
-    if(isAdminMode) {
-        visibleMsgs = CloudDB.msgs; // Admin sieht alles
-    } else {
-        // Begleiter sieht Broadcasts ODER Nachrichten an sich selbst
-        visibleMsgs = CloudDB.msgs.filter(m => m.to === "Alle" || m.to === filters.companion || m.from === filters.companion);
-    }
-
-    if(visibleMsgs.length === 0) {
-        list.innerHTML = '<div class="msg-item">Keine Nachrichten vorhanden.</div>';
-        return;
-    }
-
-    list.innerHTML = visibleMsgs.reverse().map(m => `
-        <div class="msg-item ${m.to === 'Alle' ? 'broadcast' : ''} ${m.from === 'Admin' ? 'admin-note' : ''}">
-            <small style="color:var(--text-dim)">${m.time} | von ${m.from}:</small><br>
-            <b>${m.txt}</b>
-        </div>
-    `).join("");
+    let visible = isAdminMode ? CloudDB.msgs : CloudDB.msgs.filter(m => m.to === "Alle" || m.to === filters.companion || m.from === filters.companion);
+    list.innerHTML = visible.length ? visible.reverse().map(m => `<div class="msg-item"><b>${m.from}:</b> ${m.txt} <small>(${m.time})</small></div>`).join("") : "Keine Nachrichten.";
 }
 
 async function sendMessage() {
     const input = document.getElementById("msgInput");
-    const target = document.getElementById("msgTarget").value || "Admin";
     if(!input.value.trim()) return;
-
-    const newMsg = {
+    CloudDB.msgs.push({
         from: isAdminMode ? "Admin" : filters.companion,
-        to: isAdminMode ? target : "Admin",
+        to: isAdminMode ? document.getElementById("msgTarget").value : "Admin",
         txt: input.value.trim(),
-        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-    };
-
-    CloudDB.msgs.push(newMsg);
-    // Behalte nur die letzten 20 Nachrichten
-    if(CloudDB.msgs.length > 20) CloudDB.msgs.shift();
-
+        time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+    });
     await saveToCloud();
     input.value = "";
     renderMessages();
@@ -265,12 +220,12 @@ async function sendMessage() {
 function render() {
     const now = new Date();
     data.sort((a,b) => b.fD - a.fD);
-    
     const playedPast = data.filter(d => d.played);
     const userHistory = playedPast.filter(m => m.begleiter.includes(filters.companion || "---"));
     
+    // Ticker
     if (userHistory.length > 0) {
-        const lastVisit = userHistory[0].fD; 
+        const lastVisit = userHistory[0].fD;
         if(tickerInterval) clearInterval(tickerInterval);
         tickerInterval = setInterval(() => {
             const diff = Math.max(0, new Date() - lastVisit);
@@ -283,108 +238,76 @@ function render() {
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
         const isFuture = !m.played && m.fD > now;
-        const confirmedList = m.begleiter ? m.begleiter.split(/,| und /).map(n => n.trim()).filter(n => n && n.toLowerCase() !== 'nicht im stadion') : [];
-        const isUserConfirmed = confirmedList.includes(filters.companion || "");
-        
+        const confirmed = m.begleiter ? m.begleiter.split(/,| und /).map(n => n.trim()).filter(n => n && n.toLowerCase() !== 'nicht im stadion') : [];
+        const isUserConf = confirmed.includes(filters.companion);
         const requests = CloudDB.zusagen.filter(z => z.date === m.datum).map(z => z.user);
-        const hasRequested = requests.includes(filters.companion);
+        
+        if(filters.companion && !isFuture && !isUserConf) return "";
 
-        if(filters.companion && !isFuture && !isUserConfirmed) return "";
+        // DEADLINE BERECHNUNG
+        let deadlineDate = new Date(m.fD);
+        deadlineDate.setDate(deadlineDate.getDate() - (m.ort === 'A' ? 7 : 3));
+        const isExpired = now > deadlineDate;
+        const deadlineStr = deadlineDate.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
 
         let actionHtml = "";
         if(filters.companion) {
             if(isFuture) {
-                if(isUserConfirmed) actionHtml = '<span class="name-tag tag-confirmed">BESTÄTIGT ✅</span>';
-                else if(hasRequested) actionHtml = '<span class="name-tag tag-request">ANGEFRAGT...</span>';
-                else actionHtml = `<button class="btn-zusage" onclick="submitZusage('${m.datum}', '${m.gegner}')">DABEI!</button>`;
-            } else if(isUserConfirmed) actionHtml = '<span class="st-dot"></span> Dabei';
+                if(isUserConf) actionHtml = '<span class="name-tag tag-confirmed">BESTÄTIGT ✅</span>';
+                else if(requests.includes(filters.companion)) actionHtml = '<span class="name-tag tag-request">ANGEFRAGT...</span>';
+                else {
+                    actionHtml = `<button class="btn-zusage" ${isExpired ? 'disabled' : ''} onclick="submitZusage('${m.datum}', '${m.gegner}')">${isExpired ? 'FRIST ABGELAUFEN' : 'DABEI!'}</button>`;
+                }
+                actionHtml += `<span class="deadline-info ${isExpired ? 'expired' : ''}">Frist: bis ${deadlineStr}.</span>`;
+            } else if(isUserConf) actionHtml = 'Dabei';
         } else {
-            let tags = confirmedList.map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("");
-            let reqs = requests.map(n => `
-                <span class="name-tag tag-request">? ${n} 
-                    <button class="btn-mini" style="background:#fff" onclick="handleAdminRequest('${m.datum}', '${n}', true, '${m.gegner}')">✔</button>
-                    <button class="btn-mini" style="background:#fff; color:var(--red)" onclick="handleAdminRequest('${m.datum}', '${n}', false, '${m.gegner}')">✖</button>
-                </span>`).join("");
-            actionHtml = `<div style="display:flex; flex-direction:column;">${tags}${reqs}</div>`;
+            let tags = confirmed.map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("");
+            let reqs = requests.map(n => `<span class="name-tag tag-request">? ${n} <button class="btn-mini" onclick="handleReq('${m.datum}','${n}',true)">✔</button></span>`).join("");
+            actionHtml = tags + reqs + (isFuture ? `<span class="deadline-info">Frist: ${deadlineStr}.</span>` : "");
         }
 
-        const heim = m.ort === 'H' ? m.meinVerein : m.gegner;
-        const gast = m.ort === 'A' ? m.meinVerein : m.gegner;
+        const h = m.ort==='H'?m.meinVerein:m.gegner; 
+        const g = m.ort==='A'?m.meinVerein:m.gegner;
 
         return `<tr class="${isFuture ? 'future-row' : ''}">
             <td style="font-size:0.7rem">${m.datum}</td>
-            <td><span style="font-size:8px; padding:2px 4px; background:#334155; border-radius:3px;">${m.ort}</span></td>
-            <td style="text-align:right"><b>${heim}</b> <img src="logos/${heim}.png" class="logo-img" onerror="this.style.display='none'"></td>
+            <td>${m.ort}</td>
+            <td style="text-align:right"><b>${h}</b> <img src="logos/${h}.png" class="logo-img" onerror="this.style.display='none'"></td>
             <td><div class="score-box">${m.played ? (m.ort=='H'?m.tK+':'+m.tG:m.tG+':'+m.tK) : '-:-'}</div></td>
-            <td style="text-align:left"><img src="logos/${gast}.png" class="logo-img" onerror="this.style.display='none'"> <b>${gast}</b></td>
+            <td style="text-align:left"><img src="logos/${g}.png" class="logo-img" onerror="this.style.display='none'"> <b>${g}</b></td>
             <td>${actionHtml}</td>
         </tr>`;
     }).join("");
 
     if(isAdminMode) {
         const comps = {};
-        data.forEach(m => {
-            if(m.begleiter && m.begleiter.toLowerCase() !== "nicht im stadion") {
-                m.begleiter.split(/,| und /).forEach(n => {
-                    const name = n.trim(); if(!name) return;
-                    if(!comps[name]) comps[name] = {sp: 0, last: null};
-                    if(m.played) { comps[name].sp++; if(!comps[name].last || m.fD > comps[name].last) comps[name].last = m.fD; }
-                });
-            }
-        });
-        const sortedNames = Object.keys(comps).sort();
-        document.getElementById("companionSelect").innerHTML = '<option value="">Name wählen...</option>' + sortedNames.map(n => `<option value="${n}">${n}</option>`).join("");
-        document.getElementById("msgTarget").innerHTML = '<option value="Alle">An Alle</option>' + sortedNames.map(n => `<option value="${n}">${n}</option>`).join("");
-        document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps).sort((a,b)=>b[1].sp - a[1].sp).map(([n, s]) => `<tr><td style="padding:10px; text-align:left;"><b>${n}</b></td><td>${s.sp}x</td><td>${s.last ? Math.floor((now-s.last)/86400000)+'T.' : '-'}</td></tr>`).join("");
+        data.forEach(m => { if(m.begleiter && m.played) m.begleiter.split(/,| und /).forEach(n => {
+            const name = n.trim(); if(!name || name === "nicht im stadion") return;
+            if(!comps[name]) comps[name] = {sp:0, last:null}; comps[name].sp++; comps[name].last = m.fD;
+        })});
+        const sn = Object.keys(comps).sort();
+        document.getElementById("companionSelect").innerHTML = sn.map(n => `<option value="${n}">${n}</option>`).join("");
+        document.getElementById("msgTarget").innerHTML = '<option value="Alle">Alle</option>' + sn.map(n => `<option value="${n}">${n}</option>`).join("");
+        document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps).sort((a,b)=>b[1].sp-a[1].sp).map(([n,s])=>`<tr><td>${n}</td><td>${s.sp}x</td><td>${Math.floor((now-s.last)/86400000)}T.</td></tr>`).join("");
         document.getElementById("statCount").innerText = playedPast.length;
-        document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
-    } else {
-        document.getElementById("statCount").innerText = userHistory.length;
-        document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
     }
 }
 
-async function handleAdminRequest(datum, user, accept, gegner) {
-    const statusTxt = accept ? "ANGENOMMEN" : "ABGELEHNT";
-    CloudDB.msgs.push({
-        from: "Admin", to: user, txt: `Deine Anfrage für das Spiel vs. ${gegner} wurde ${statusTxt}.`,
-        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-    });
-    CloudDB.zusagen = CloudDB.zusagen.filter(z => !(z.date === datum && z.user === user));
-    await saveToCloud();
-    refreshData();
+async function submitZusage(d, g) {
+    CloudDB.zusagen.push({ user: filters.companion, date: d });
+    CloudDB.msgs.push({ from: filters.companion, to: "Admin", txt: `Anfrage für ${g} am ${d}`, time: new Date().toLocaleTimeString() });
+    await saveToCloud(); refreshData();
 }
 
-async function submitZusage(datum, gegner) {
-    CloudDB.zusagen.push({ user: filters.companion, date: datum });
-    CloudDB.msgs.push({
-        from: filters.companion, to: "Admin", txt: `Ich möchte beim Spiel vs. ${gegner} dabei sein!`,
-        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-    });
-    await saveToCloud();
-    refreshData();
+async function handleReq(d, u, acc) {
+    CloudDB.zusagen = CloudDB.zusagen.filter(z => !(z.date===d && z.user===u));
+    CloudDB.msgs.push({ from: "Admin", to: u, txt: `Anfrage für ${d} bestätigt!`, time: new Date().toLocaleTimeString() });
+    await saveToCloud(); refreshData();
 }
 
-async function saveToCloud() {
-    document.getElementById("statusInfo").innerText = "Speichere...";
-    await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(CloudDB) });
-    document.getElementById("statusInfo").innerText = "Gespeichert";
-}
-
-async function clearCloud() {
-    if(confirm("Cloud komplett zurücksetzen? (Löscht alle Nachrichten & Anfragen)")) {
-        CloudDB = { zusagen: [], msgs: [] };
-        await saveToCloud();
-        refreshData();
-    }
-}
-
-function copyLink() {
-    const name = document.getElementById("companionSelect").value;
-    if(!name) return alert("Namen wählen!");
-    const url = window.location.origin + window.location.pathname + "?user=" + encodeURIComponent(name);
-    navigator.clipboard.writeText(url).then(() => alert("Link kopiert!"));
-}
+async function saveToCloud() { await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(CloudDB) }); }
+async function clearCloud() { if(confirm("Reset?")) { CloudDB={zusagen:[],msgs:[]}; await saveToCloud(); refreshData(); } }
+function copyLink() { navigator.clipboard.writeText(window.location.origin + window.location.pathname + "?user=" + encodeURIComponent(document.getElementById("companionSelect").value)); alert("Kopiert!"); }
 function logout() { window.location.href = window.location.pathname; }
 </script>
 </body>
