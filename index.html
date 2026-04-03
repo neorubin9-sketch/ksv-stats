@@ -177,16 +177,36 @@ async function handleAuth() {
     const pwHash = await hash(pw);
     const targetAdminHash = CloudDB.adminHash || FALLBACK_ADMIN_HASH;
 
-    if(pwHash === targetAdminHash) { 
+    // 1. STRENGERE PRÜFUNG: Admin-Passwort nur zulassen, wenn KEINE Begleiter-ID im Link ist
+    if(!filters.companion && pwHash === targetAdminHash) { 
         if(!CloudDB.adminHash) { CloudDB.adminHash = pwHash; await saveToCloud(); }
-        showApp(true); return; 
+        showApp(true); 
+        return; 
     }
-    if(filters.companion && (!CloudDB.users[filters.companion] || CloudDB.users[filters.companion] === pwHash)) {
-        if(!CloudDB.users[filters.companion]) { CloudDB.users[filters.companion] = pwHash; }
-        CloudDB.lastSeen[filters.companion] = Date.now();
-        await saveToCloud();
-        showApp(false);
-    } else { alert("Passwort falsch!"); }
+
+    // 2. Begleiter-Login: Hier wird NUR das Passwort des Begleiters akzeptiert
+    if(filters.companion) {
+        // Falls der Admin über den "VIEW"-Button kommt (Spezial-Modus)
+        const params = new URLSearchParams(window.location.search);
+        if(params.get('mode') === 'view' && pwHash === targetAdminHash) {
+             showApp(false);
+             return;
+        }
+
+        // Normaler Begleiter-Login
+        if(!CloudDB.users[filters.companion] || CloudDB.users[filters.companion] === pwHash) {
+            if(!CloudDB.users[filters.companion]) { 
+                CloudDB.users[filters.companion] = pwHash; 
+            }
+            CloudDB.lastSeen[filters.companion] = Date.now();
+            await saveToCloud();
+            showApp(false);
+        } else { 
+            alert("Passwort falsch! Das Admin-Passwort funktioniert hier nicht."); 
+        }
+    } else { 
+        alert("Zugriff verweigert."); 
+    }
 }
 
 async function showApp(isAdmin) {
