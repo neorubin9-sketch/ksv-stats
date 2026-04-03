@@ -51,6 +51,7 @@
   .stat-mini { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
   .stat-mini span { font-size: 0.75rem; color: var(--text-dim); display: block; }
   .stat-mini b { display: block; font-size: 1.3rem; color: #fff; margin-top: 5px; }
+  .btn-view { background: var(--blue); color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-right: 5px; }
 </style>
 </head>
 <body>
@@ -98,11 +99,11 @@
 
   <div class="ticker-card" id="tickerBox">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div id="tickerLabel" style="color:var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Zeit seit deinem letzten Stadionbesuch</div>
+    <div id="tickerLabel" style="color:var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Zeit seit dem letzten Stadionbesuch</div>
   </div>
 
   <div class="stats-bar">
-    <div class="stat-mini"><span>Deine Besuche</span><b id="statCount">-</b></div>
+    <div class="stat-mini"><span>Besuche</span><b id="statCount">-</b></div>
     <div class="stat-mini"><span>Status</span><b id="statStatus">Aktiv</b></div>
     <div class="stat-mini"><span>Anfragen</span><b id="statReqs" style="color:var(--amber)">0</b></div>
     <div class="stat-mini"><span>Zukünftige Spiele</span><b id="statTotal">-</b></div>
@@ -150,6 +151,11 @@ window.onload = async () => {
         filters.companion = CloudDB.userIds[id];
         activeChat = "Admin";
         document.getElementById("loginTitle").innerText = "Moin, " + filters.companion;
+        document.getElementById("loginDesc").innerText = "SIMULATIONS-MODUS AKTIV";
+        // Simulieren wir einen automatischen Login im Testmodus
+        if(params.get('mode') === 'view') {
+            showApp(false);
+        }
     }
 };
 
@@ -257,7 +263,6 @@ function render() {
     const now = new Date();
     data.sort((a,b) => b.fD - a.fD);
     
-    // Globales Ranking berechnen
     const comps = {};
     data.forEach(m => {
         const manual = CloudDB.confirmedManual[m.datum] || [];
@@ -270,16 +275,18 @@ function render() {
         document.getElementById("companionTable").querySelector("tbody").innerHTML = sortedComps.map(([n, s]) => `<tr><td>${n}</td><td style="text-align:center">${s}x</td></tr>`).join("");
         const allNames = Object.keys(comps).sort();
         document.getElementById("companionSelect").innerHTML = allNames.map(n => `<option value="${n}">${n}</option>`).join("");
-        document.getElementById("userTable").querySelector("tbody").innerHTML = allNames.map(u => `<tr><td>${u}</td><td style="text-align:center">${CloudDB.users[u] ? '✅ Aktiv' : '⏳ Wartend'}</td><td><button onclick="resetUser('${u}')" style="background:var(--red); color:white; border:none; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td></tr>`).join("");
+        document.getElementById("userTable").querySelector("tbody").innerHTML = allNames.map(u => {
+            const id = Object.keys(CloudDB.userIds).find(k => CloudDB.userIds[k] === u);
+            const viewBtn = id ? `<button class="btn-view" onclick="switchToUser('${id}')">VIEW</button>` : '';
+            return `<tr><td>${u}</td><td style="text-align:center">${CloudDB.users[u] ? '✅ Aktiv' : '⏳ Wartend'}</td><td>${viewBtn}<button onclick="resetUser('${u}')" style="background:var(--red); color:white; border:none; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td></tr>`;
+        }).join("");
     }
 
-    // Spielplan & Filter
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
         const isFuture = !m.played && m.fD > now;
         const manual = CloudDB.confirmedManual[m.datum] || [];
         const confirmed = [...new Set([...m.begleiter.split(/,| und /).map(n => n.trim()), ...manual])].filter(n => n && n !== "nicht im stadion");
-        
         if(filters.companion && !isFuture && !confirmed.includes(filters.companion)) return "";
         
         let statusHtml = "";
@@ -294,14 +301,11 @@ function render() {
                 else statusHtml = `<button class="btn-action" style="padding:5px 15px; font-size:0.7rem;" onclick="submitZusage('${m.datum}')">DABEI!</button>`;
             }
         } else { statusHtml = confirmed.map(n => `<span class="tag-confirmed">${n}</span>`).join(""); }
-        
         return `<tr><td>${m.datum}</td><td>${m.ort}</td><td>${m.gegner}</td><td>${m.played?m.tK+':'+m.tG:'-:-'}</td><td>${statusHtml}</td></tr>`;
     }).join("");
 
-    // TICKER & STATS
     const userHistory = data.filter(m => m.played && (m.begleiter.split(/,| und /).includes(filters.companion) || (CloudDB.confirmedManual[m.datum] && CloudDB.confirmedManual[m.datum].includes(filters.companion))));
     const lastMatch = isAdminMode ? data.filter(m => m.played)[0] : userHistory[0];
-    
     if(lastMatch) {
         const last = lastMatch.fD;
         const tick = () => {
@@ -315,6 +319,10 @@ function render() {
     document.getElementById("statCount").innerText = isAdminMode ? data.filter(m => m.played).length : userHistory.length;
     document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
     document.getElementById("statReqs").innerText = CloudDB.zusagen.length;
+}
+
+function switchToUser(id) {
+    window.location.href = window.location.pathname + "?id=" + id + "&mode=view";
 }
 
 async function resetUser(u) {
