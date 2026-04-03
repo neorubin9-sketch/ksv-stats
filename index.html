@@ -14,12 +14,14 @@
   body{ margin:0; padding:10px; background: var(--bg); color:var(--text); line-height: 1.5; }
   .container { max-width: 1650px; margin: 0 auto; display: none; } 
 
+  /* Login Styles */
   #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
   .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
   input[type="password"], input[type="text"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; text-align: center; }
   .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
   
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
+  .admin-panel { background: rgba(96, 165, 250, 0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--blue); margin-bottom: 20px; }
   .msg-center { background: var(--card); border: 1px solid var(--blue); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
   .msg-list { max-height: 150px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
   .msg-item { padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; border-left: 4px solid var(--blue); background: rgba(255,255,255,0.03); }
@@ -101,7 +103,6 @@
         <tbody></tbody>
       </table>
     </div>
-    
     <div style="display:flex; flex-direction:column; gap:20px;">
         <div class="table-container">
             <h3>👤 BEGLEITER-RANKING</h3>
@@ -110,7 +111,6 @@
               <tbody></tbody>
             </table>
         </div>
-
         <div class="table-container" id="userManagementSection" style="display:none; border: 1px solid var(--blue);">
             <h3 style="color:#60a5fa">🔑 BENUTZER-STATUS</h3>
             <table id="userTable" style="width:100%; border-collapse:collapse;">
@@ -139,10 +139,9 @@ window.onload = async () => {
         document.getElementById("adminToggleBtn").style.display = "none";
         if(!CloudDB.users[filters.companion]) {
             document.getElementById("loginTitle").innerText = "Moin, " + filters.companion;
-            document.getElementById("loginDesc").innerText = "Account ungeschützt. Erstelle ein Passwort:";
-            document.querySelector("#loginBox button").innerText = "JETZT REGISTRIEREN";
+            document.getElementById("loginDesc").innerText = "Erstelle ein neues Passwort:";
         } else {
-            document.getElementById("loginTitle").innerText = "Login: " + filters.companion;
+            document.getElementById("loginTitle").innerText = "Begleiter Login: " + filters.companion;
         }
     }
 };
@@ -159,15 +158,19 @@ async function handleAuth() {
     const pwHash = await hash(pw);
 
     if(isAdminMode) {
+        // ADMIN LOGIN - Vergleicht mit festem Hash im Code
         if(pwHash === ADMIN_HASH) showApp(true);
-        else alert("Falsch!");
+        else alert("Admin-Passwort falsch!");
         return;
     }
 
+    // BEGLEITER LOGIN - Vergleicht mit Cloud-DB
+    if(!filters.companion) return alert("Kein Benutzer ausgewählt!");
+    
     if(!CloudDB.users[filters.companion]) {
         CloudDB.users[filters.companion] = pwHash;
         await saveToCloud();
-        alert("Account gesichert!");
+        alert("Passwort erstellt!");
         showApp(false);
     } else {
         if(CloudDB.users[filters.companion] === pwHash) showApp(false);
@@ -177,8 +180,11 @@ async function handleAuth() {
 
 function toggleAdminLogin() {
     isAdminMode = !isAdminMode;
+    const input = document.getElementById("passInput");
+    input.value = ""; // Feld leeren beim Umschalten
     document.getElementById("loginTitle").innerText = isAdminMode ? "Admin Login" : "Begleiter Login";
     document.getElementById("adminToggleBtn").innerText = isAdminMode ? "Zurück zum Begleiter" : "Als Admin anmelden";
+    input.focus();
 }
 
 async function showApp(isAdmin) {
@@ -189,10 +195,6 @@ async function showApp(isAdmin) {
         document.getElementById("adminTools").style.display = "block";
         document.getElementById("msgTarget").style.display = "block";
         document.getElementById("userManagementSection").style.display = "block";
-    } else {
-        document.getElementById("adminTools").style.display = "none";
-        document.getElementById("userManagementSection").style.display = "none";
-        document.getElementById("viewTitle").innerText = "Moin, " + filters.companion;
     }
     render();
     renderMessages();
@@ -202,8 +204,6 @@ async function refreshData() {
     const [resExcel, resCloud] = await Promise.all([fetch('daten.json?v=' + Date.now()), fetch(DB_URL)]);
     const excelJson = await resExcel.json();
     CloudDB = await resCloud.json();
-    
-    // Sicherstellen, dass CloudDB Strukturen hat
     if(!CloudDB.users) CloudDB.users = {};
     if(!CloudDB.zusagen) CloudDB.zusagen = [];
     if(!CloudDB.msgs) CloudDB.msgs = [];
