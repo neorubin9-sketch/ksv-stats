@@ -158,7 +158,6 @@ window.onload = async () => {
             renderMessages();
             document.getElementById("statSync").innerText = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
         } else if(filters.companion) {
-            // Begleiter pingen nur kurz ihren Status hoch
             CloudDB.lastSeen[filters.companion] = Date.now();
             await saveToCloud();
         }
@@ -176,37 +175,35 @@ async function handleAuth() {
     if(!pw) return alert("Eingabe fehlt!");
     const pwHash = await hash(pw);
     const targetAdminHash = CloudDB.adminHash || FALLBACK_ADMIN_HASH;
+    
+    const params = new URLSearchParams(window.location.search);
+    const isViewMode = params.get('mode') === 'view';
 
-    // 1. STRENGERE PRÜFUNG: Admin-Passwort nur zulassen, wenn KEINE Begleiter-ID im Link ist
+    // 1. ADMIN-LOGIN (Nur Hauptseite)
     if(!filters.companion && pwHash === targetAdminHash) { 
         if(!CloudDB.adminHash) { CloudDB.adminHash = pwHash; await saveToCloud(); }
-        showApp(true); 
-        return; 
+        showApp(true); return; 
     }
 
-    // 2. Begleiter-Login: Hier wird NUR das Passwort des Begleiters akzeptiert
+    // 2. BEGLEITER-LOGIN
     if(filters.companion) {
-        // Falls der Admin über den "VIEW"-Button kommt (Spezial-Modus)
-        const params = new URLSearchParams(window.location.search);
-        if(params.get('mode') === 'view' && pwHash === targetAdminHash) {
-             showApp(false);
-             return;
-        }
+        // VIEW-MODUS Ausnahme für dich
+        if(isViewMode && pwHash === targetAdminHash) { showApp(false); return; }
 
-        // Normaler Begleiter-Login
-        if(!CloudDB.users[filters.companion] || CloudDB.users[filters.companion] === pwHash) {
-            if(!CloudDB.users[filters.companion]) { 
-                CloudDB.users[filters.companion] = pwHash; 
-            }
+        if(!CloudDB.users[filters.companion]) {
+            if(pwHash === targetAdminHash) { alert("Admin-Passwort hier blockiert. Wähle ein eigenes!"); return; }
+            CloudDB.users[filters.companion] = pwHash;
             CloudDB.lastSeen[filters.companion] = Date.now();
             await saveToCloud();
             showApp(false);
-        } else { 
-            alert("Passwort falsch! Das Admin-Passwort funktioniert hier nicht."); 
+        } else {
+            if(CloudDB.users[filters.companion] === pwHash) {
+                CloudDB.lastSeen[filters.companion] = Date.now();
+                await saveToCloud();
+                showApp(false);
+            } else { alert("Falsches Passwort!"); }
         }
-    } else { 
-        alert("Zugriff verweigert."); 
-    }
+    } else { alert("Zugriff verweigert."); }
 }
 
 async function showApp(isAdmin) {
@@ -300,13 +297,13 @@ function render() {
         document.getElementById("userTable").querySelector("tbody").innerHTML = allNames.map(u => {
             const id = Object.keys(CloudDB.userIds).find(k => CloudDB.userIds[k] === u);
             const lastTime = CloudDB.lastSeen[u];
-            let status = '<span class="status-badge no-pw">Kein Passwort</span>';
+            let status = '<span class="status-badge no-pw">Noch kein Passwort vergeben</span>';
             if(CloudDB.users[u] && lastTime) {
                 const diff = (now - lastTime) / 1000;
                 if(diff < 90) { status = '<span class="status-badge online">ONLINE</span>'; }
                 else { 
                     const d = new Date(lastTime);
-                    status = `<span style="font-size:0.75rem; color:var(--text-dim)">Zuletzt online: ${d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})}. ${d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})}</span>`;
+                    status = `<span style="font-size:0.75rem; color:var(--text-dim)">Zuletzt online am ${d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})}. um ${d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})} Uhr</span>`;
                 }
             }
             const viewBtn = id ? `<button class="btn-view" onclick="switchToUser('${id}')">VIEW</button>` : '';
