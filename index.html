@@ -46,8 +46,8 @@
 <div id="loginOverlay">
     <div class="login-box">
         <h2 id="loginTitle">KSV Dashboard</h2>
-        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Passwort erforderlich.</p>
-        <input type="password" id="passInput" placeholder="Passwort eingeben...">
+        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Initialisierung...</p>
+        <input type="password" id="passInput" placeholder="Passwort...">
         <button class="btn-action" onclick="handleAuth()">LOGIN</button>
     </div>
 </div>
@@ -81,7 +81,7 @@
 
   <div class="ticker-card" style="background: var(--card); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border);">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase; text-align:center;">Abwesenheit vom Stadion</div>
+    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase; text-align:center;">Zeit ohne Stadionbesuch</div>
   </div>
 
   <div class="stats-bar">
@@ -118,12 +118,10 @@
 </div>
 
 <script>
-// Master-Hash für "KSV"
-const ADMIN_HASH = "80f84501a359739070381373516422d369f688034d6f6e52003c200676450f3b"; 
 const NPOINT_ID = "15abfbbebe2742f743b2"; 
 const DB_URL = `https://api.npoint.io/${NPOINT_ID}`;
 
-let data = [], CloudDB = { zusagen: [], msgs: [], users: {} }, filters = {companion: null}, isAdminMode = false;
+let data = [], CloudDB = { zusagen: [], msgs: [], users: {}, adminHash: null }, filters = {companion: null}, isAdminMode = false;
 
 window.onload = async () => {
     const params = new URLSearchParams(window.location.search);
@@ -133,11 +131,10 @@ window.onload = async () => {
     if(user) {
         filters.companion = decodeURIComponent(user);
         document.getElementById("loginTitle").innerText = "Moin, " + filters.companion;
-        if(!CloudDB.users[filters.companion]) {
-            document.getElementById("loginDesc").innerText = "Lege jetzt dein persönliches Passwort fest:";
-        } else {
-            document.getElementById("loginDesc").innerText = "Bitte dein persönliches Passwort eingeben.";
-        }
+        document.getElementById("loginDesc").innerText = CloudDB.users[filters.companion] ? "Bitte dein Passwort eingeben." : "Noch kein Passwort gesetzt. Lege jetzt eines fest:";
+    } else {
+        document.getElementById("loginTitle").innerText = "KSV Admin";
+        document.getElementById("loginDesc").innerText = CloudDB.adminHash ? "Bitte Master-Passwort eingeben." : "System-Einrichtung: Lege jetzt dein Master-Passwort fest:";
     }
 };
 
@@ -149,33 +146,39 @@ async function hash(str) {
 
 async function handleAuth() {
     const pw = document.getElementById("passInput").value;
-    if(!pw) return alert("Eingabe fehlt!");
+    if(!pw) return alert("Bitte Passwort eingeben!");
     const pwHash = await hash(pw);
 
-    // 1. Check: Ist es das Admin-Passwort?
-    if(pwHash === ADMIN_HASH) {
-        showApp(true);
+    // Wenn kein User in der URL steht -> Admin Modus
+    if(!filters.companion) {
+        if(!CloudDB.adminHash) {
+            // Master Passwort zum ersten Mal setzen
+            CloudDB.adminHash = pwHash;
+            await saveToCloud();
+            alert("Master-Passwort erfolgreich erstellt!");
+            showApp(true);
+        } else {
+            if(pwHash === CloudDB.adminHash) {
+                showApp(true);
+            } else {
+                alert("Falsches Admin-Passwort!");
+            }
+        }
         return;
     }
 
-    // 2. Check: Ist ein Begleiter über einen Link da?
-    if(filters.companion) {
-        if(!CloudDB.users[filters.companion]) {
-            // Erstmalige Registrierung
-            CloudDB.users[filters.companion] = pwHash;
-            await saveToCloud();
-            alert("Passwort für " + filters.companion + " erfolgreich gesetzt!");
+    // Begleiter Modus
+    if(!CloudDB.users[filters.companion]) {
+        CloudDB.users[filters.companion] = pwHash;
+        await saveToCloud();
+        alert("Passwort für " + filters.companion + " gesetzt!");
+        showApp(false);
+    } else {
+        if(CloudDB.users[filters.companion] === pwHash) {
             showApp(false);
         } else {
-            // Normaler User Login
-            if(CloudDB.users[filters.companion] === pwHash) {
-                showApp(false);
-            } else {
-                alert("Falsches Passwort!");
-            }
+            alert("Falsches Passwort!");
         }
-    } else {
-        alert("Falsches Passwort oder kein Benutzer-Link genutzt!");
     }
 }
 
@@ -191,7 +194,6 @@ async function showApp(isAdmin) {
         document.getElementById("viewTitle").innerText = "Moin, " + filters.companion;
     }
     render();
-    renderMessages();
 }
 
 async function refreshData() {
@@ -199,6 +201,8 @@ async function refreshData() {
         const [resExcel, resCloud] = await Promise.all([fetch('daten.json?v=' + Date.now()), fetch(DB_URL)]);
         const excelJson = await resExcel.json();
         CloudDB = await resCloud.json();
+        
+        // Initial-Struktur falls npoint leer ist
         if(!CloudDB.users) CloudDB.users = {};
         if(!CloudDB.zusagen) CloudDB.zusagen = [];
         if(!CloudDB.msgs) CloudDB.msgs = [];
@@ -267,7 +271,7 @@ function render() {
             const hasReq = CloudDB.zusagen.some(z => z.date === m.datum && z.user === filters.companion);
             if(conf.includes(filters.companion)) action = '<span class="name-tag tag-confirmed">BESTÄTIGT</span>';
             else if(hasReq) action = '<span class="name-tag tag-request">ANGEFRAGT...</span>';
-            else action = `<button class="btn-action" style="padding:5px 10px; font-size:0.7rem;" onclick="submitZusage('${m.datum}', '${m.gegner}')">DABEI!</button>`;
+            else action = `<button class="btn-action" style="padding:5px 10px; font-size:0.7rem;" onclick="submitZusage('${m.datum}')">DABEI!</button>`;
         } else if(isAdminMode) {
             const reqs = CloudDB.zusagen.filter(z => z.date === m.datum).map(z => z.user);
             action = conf.map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("") + 
@@ -281,33 +285,11 @@ function render() {
     document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
 }
 
-function renderMessages() {
-    const list = document.getElementById("msgList");
-    let vis = isAdminMode ? CloudDB.msgs : CloudDB.msgs.filter(m => m.to === "Alle" || m.to === filters.companion || m.from === filters.companion);
-    list.innerHTML = vis.length ? vis.reverse().map(m => `<div class="msg-item"><b>${m.from}:</b> ${m.txt}</div>`).join("") : "Keine Nachrichten.";
-}
-
-async function sendMessage() {
-    const txt = document.getElementById("msgInput").value; if(!txt) return;
-    CloudDB.msgs.push({ from: isAdminMode ? "Admin" : filters.companion, to: isAdminMode ? document.getElementById("msgTarget").value : "Admin", txt: txt, time: new Date().toLocaleTimeString() });
-    await saveToCloud(); document.getElementById("msgInput").value = ""; renderMessages();
-}
-
-async function submitZusage(d, g) {
-    CloudDB.zusagen.push({ user: filters.companion, date: d });
-    await saveToCloud(); render();
-}
-
-async function handleReq(d, u) {
-    CloudDB.zusagen = CloudDB.zusagen.filter(z => !(z.date===d && z.user===u));
-    await saveToCloud(); render();
-}
-
-async function resetPW(u) { if(confirm(`PW für ${u} löschen?`)) { delete CloudDB.users[u]; await saveToCloud(); render(); } }
 async function saveToCloud() { await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(CloudDB) }); }
+async function resetPW(u) { if(confirm(`PW für ${u} löschen?`)) { delete CloudDB.users[u]; await saveToCloud(); render(); } }
 function logout() { window.location.href = window.location.pathname; }
-function copyLink() { navigator.clipboard.writeText(window.location.origin + window.location.pathname + "?user=" + encodeURIComponent(document.getElementById("companionSelect").value)); alert("Kopiert!"); }
-async function clearCloud() { if(confirm("RESET?")) { CloudDB={zusagen:[],msgs:[],users:{}}; await saveToCloud(); render(); } }
+function copyLink() { navigator.clipboard.writeText(window.location.origin + window.location.pathname + "?user=" + encodeURIComponent(document.getElementById("companionSelect").value)); alert("Link kopiert!"); }
+async function clearCloud() { if(confirm("RESET?")) { CloudDB={zusagen:[],msgs:[],users:{}, adminHash:null}; await saveToCloud(); location.reload(); } }
 </script>
 </body>
 </html>
