@@ -80,13 +80,13 @@
 
   <div class="ticker-card">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Seit deinem letzten Stadionbesuch</div>
+    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Zeit ohne Stadion</div>
   </div>
 
   <div class="stats-bar">
     <div class="stat-mini"><span>Besuche</span><b id="statCount">-</b></div>
     <div class="stat-mini"><span>Status</span><b id="statStatus">Aktiv</b></div>
-    <div class="stat-mini"><span>Spiele offen</span><b id="statTotal">-</b></div>
+    <div class="stat-mini"><span>Anstehend</span><b id="statTotal">-</b></div>
     <div class="stat-mini"><span>Zuletzt vor</span><b id="statDays">-</b></div>
   </div>
 
@@ -152,22 +152,26 @@ async function refreshData() {
         const cloudJson = await resCloud.json();
         ZusagenCloud = cloudJson.zusagen || [];
         
-        data = excelJson.map(r => ({
-            fD: parseFixDate(r["Datum"] || r["datum"], r["Uhrzeit"] || r["uhrzeit"]),
-            datum: r["Datum"] || r["datum"], 
-            gegner: r["Gegner"], 
-            meinVerein: r["Mein Verein"],
-            ort: (r["Ort"] || "H").toUpperCase(),
-            tK: r["Tore Kiel"] || "", 
-            tG: r["Tore Gegner"] || "",
-            played: r["Status"] === "Abgeschlossen" || (r["Tore Kiel"] !== "" && r["Tore Kiel"] !== undefined),
-            begleiter: (r["Begleiter"] || "").trim()
-        }));
+        data = excelJson.map(r => {
+            const isAbgeschlossen = r["Status"] === "Abgeschlossen";
+            const hatErgebnis = r["Tore Kiel"] !== "" && r["Tore Kiel"] !== undefined && r["Tore Kiel"] !== "-:-";
+            return {
+                fD: parseFixDate(r["Datum"] || r["datum"], r["Uhrzeit"] || r["uhrzeit"]),
+                datum: r["Datum"] || r["datum"], 
+                gegner: r["Gegner"], 
+                meinVerein: r["Mein Verein"],
+                ort: (r["Ort"] || "H").toUpperCase(),
+                tK: r["Tore Kiel"] || "", 
+                tG: r["Tore Gegner"] || "",
+                played: isAbgeschlossen || hatErgebnis,
+                begleiter: (r["Begleiter"] || "").trim()
+            };
+        });
         
         render();
         document.getElementById("statusInfo").innerText = "Daten synchronisiert";
     } catch (e) { 
-        document.getElementById("statusInfo").innerText = "Ladefehler!"; 
+        document.getElementById("statusInfo").innerText = "Fehler!"; 
     }
 }
 
@@ -206,10 +210,13 @@ function render() {
 
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
+        // WICHTIG: Spiel ist nur Zukunft wenn Status nicht Abgeschlossen UND Datum > jetzt
         const isFuture = !m.played && m.fD > now;
         const confirmedList = m.begleiter ? m.begleiter.split(/,| und /).map(n => n.trim()) : [];
         const isUserConfirmed = confirmedList.includes(filters.companion || "");
-        const requests = ZusagenCloud.filter(z => z.date === m.datum).map(z => z.user);
+        
+        // Cloud-Anfragen filtern: Nur zeigen, wenn das Spiel wirklich in der Zukunft liegt
+        const requests = ZusagenCloud.filter(z => z.date === m.datum && isFuture).map(z => z.user);
         const hasRequested = requests.includes(filters.companion);
 
         if(filters.companion && !isFuture && !isUserConfirmed) return "";
@@ -258,17 +265,15 @@ function render() {
         document.getElementById("companionSelect").innerHTML = '<option value="">Name wählen...</option>' + Object.keys(comps).sort().map(n => `<option value="${n}">${n}</option>`).join("");
         document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps).sort((a,b)=>b[1].sp - a[1].sp).map(([n, s]) => `<tr><td style="padding:10px; text-align:left;"><b>${n}</b></td><td>${s.sp}x</td><td>${s.last ? Math.floor((now-s.last)/86400000)+'T.' : '-'}</td></tr>`).join("");
         document.getElementById("statCount").innerText = playedPast.length;
-        document.getElementById("statTotal").innerText = data.filter(m => !m.played).length;
-    } else if(filters.companion) {
+        document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
+    } else {
         document.getElementById("statCount").innerText = userHistory.length;
-        document.getElementById("statTotal").innerText = data.filter(m => !m.played).length;
+        document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
     }
 }
 
 async function handleAdminRequest(datum, user, accept) {
-    if(accept) {
-        alert(`${user} für ${datum} akzeptiert.\n\nTRAGE IHN JETZT IN DEINE EXCEL EIN!`);
-    }
+    if(accept) alert(`${user} für ${datum} akzeptiert.\n\nJETZT IN EXCEL EINTRAGEN!`);
     ZusagenCloud = ZusagenCloud.filter(z => !(z.date === datum && z.user === user));
     await saveToCloud();
     refreshData();
@@ -291,7 +296,7 @@ async function saveToCloud() {
 }
 
 async function clearCloud() {
-    if(confirm("Alle offenen Anfragen unwiderruflich löschen?")) {
+    if(confirm("Alle Anfragen löschen?")) {
         ZusagenCloud = [];
         await saveToCloud();
         refreshData();
