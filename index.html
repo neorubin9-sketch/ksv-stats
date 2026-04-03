@@ -22,7 +22,7 @@
   
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
   
-  /* Messenger / Postfach */
+  /* Messenger */
   .msg-center { background: var(--card); border: 1px solid var(--blue); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
   .msg-layout { display: grid; grid-template-columns: 220px 1fr; gap: 15px; min-height: 350px; }
   @media (max-width: 768px) { .msg-layout { grid-template-columns: 1fr; } }
@@ -36,22 +36,26 @@
   .msg-bubble.them { align-self: flex-start; background: var(--border); border-bottom-left-radius: 2px; }
   .msg-meta { font-size: 0.6rem; color: var(--text-dim); margin-top: 5px; display: block; }
 
-  /* Match Table & Tags */
+  /* Admin Tables & Tags */
   .table-container { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid var(--border); overflow-x: auto; margin-bottom: 20px; }
   .match-table { width:100%; border-collapse:collapse; min-width: 600px; }
   .match-table td, .match-table th { padding: 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
   .tag-confirmed { background: var(--win); color: #000; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; margin: 2px; display: inline-block; }
   .tag-request { background: var(--amber); color: #000; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; margin: 2px; display: inline-flex; align-items: center; gap: 5px; }
-  .btn-check { background: #fff; border: none; border-radius: 4px; cursor: pointer; padding: 0 4px; font-weight: 900; color: var(--win); }
+  
+  /* Status Badges */
+  .status-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+  .online { background: var(--win); color: #000; }
+  .offline { background: var(--border); color: var(--text-dim); }
+  .no-pw { background: var(--red); color: #fff; }
 
-  /* Stats & Ticker */
+  /* Ticker */
   .ticker-card { background: var(--card); padding: 25px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center; }
   .ticker-val { font-size: 2.8rem; font-weight: 900; color: #fff; margin-bottom: 5px; }
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
   .stat-mini { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
-  .stat-mini span { font-size: 0.75rem; color: var(--text-dim); display: block; }
   .stat-mini b { display: block; font-size: 1.3rem; color: #fff; margin-top: 5px; }
-  .btn-view { background: var(--blue); color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; margin-right: 5px; }
+  .btn-view { background: var(--blue); color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -69,7 +73,7 @@
   <div class="header">
     <div>
         <h2 id="viewTitle">KSV LIVE MANAGER</h2>
-        <div id="statusInfo" style="font-size: 0.7rem; color: var(--win);">● Verbindung aktiv</div>
+        <div id="statusInfo" style="font-size: 0.7rem; color: var(--win);">● System bereit</div>
     </div>
     <button class="btn-action" style="width:auto; background:var(--red)" onclick="logout()">LOGOUT</button>
   </div>
@@ -89,8 +93,7 @@
   </div>
 
   <div class="admin-panel" id="adminTools" style="display:none; border: 1px solid var(--blue); padding: 20px; border-radius: 20px; margin-bottom: 20px;">
-    <h3 style="margin-top:0; color:#60a5fa; font-size: 0.9rem;">ADMIN STEUERUNG</h3>
-    <div style="display:flex; gap:10px; flex-wrap: wrap;">
+    <div style="display:flex; gap:10px; flex-wrap: wrap; margin-bottom:15px;">
         <select id="companionSelect" style="flex:1; margin:0;"></select>
         <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
         <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET</button>
@@ -104,13 +107,13 @@
 
   <div class="stats-bar">
     <div class="stat-mini"><span>Besuche</span><b id="statCount">-</b></div>
-    <div class="stat-mini"><span>Status</span><b id="statStatus">Aktiv</b></div>
     <div class="stat-mini"><span>Anfragen</span><b id="statReqs" style="color:var(--amber)">0</b></div>
-    <div class="stat-mini"><span>Zukünftige Spiele</span><b id="statTotal">-</b></div>
+    <div class="stat-mini"><span>Zukünftig</span><b id="statTotal">-</b></div>
+    <div class="stat-mini"><span>ID</span><b id="statID" style="font-size:0.8rem">-</b></div>
   </div>
 
   <div class="table-container">
-    <h3 style="margin-top:0;">📅 SPIELPLAN & ZUSAGEN</h3>
+    <h3 style="margin-top:0;">📅 SPIELPLAN</h3>
     <table class="match-table" id="matchTable">
       <thead><tr><th>Datum</th><th>Ort</th><th>Gegner</th><th>Score</th><th>Begleiter / Status</th></tr></thead>
       <tbody></tbody>
@@ -119,16 +122,16 @@
   
   <div id="adminSections" style="display:none; margin-top:20px; display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
     <div class="table-container">
-        <h3>👤 BEGLEITER-RANKING</h3>
+        <h3>👤 RANKING</h3>
         <table id="companionTable" style="width:100%; border-collapse:collapse; font-size: 0.85rem;">
             <thead><tr style="color:var(--text-dim); text-align:left;"><th>NAME</th><th style="text-align:center">SPIELE</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
     <div class="table-container">
-        <h3>🔑 USER-STATUS</h3>
-        <table id="userTable" style="width:100%; border-collapse:collapse; font-size: 0.85rem;">
-            <thead><tr style="color:var(--text-dim); text-align:left;"><th>NAME</th><th style="text-align:center">STATUS</th><th>AKTION</th></tr></thead>
+        <h3>🔑 USER-STATUS & VIEW</h3>
+        <table id="userTable" style="width:100%; border-collapse:collapse; font-size: 0.8rem;">
+            <thead><tr style="color:var(--text-dim); text-align:left;"><th>NAME</th><th>STATUS / LAST ONLINE</th><th>AKTION</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
@@ -140,7 +143,7 @@ const FALLBACK_ADMIN_HASH = "80f84501a359739070381373516422d369f688034d6f6e52003
 const NPOINT_ID = "15abfbbebe2742f743b2"; 
 const DB_URL = `https://api.npoint.io/${NPOINT_ID}`;
 
-let data = [], CloudDB = { zusagen: [], msgs: [], users: {}, adminHash: null, userIds: {}, confirmedManual: {} }, 
+let data = [], CloudDB = { zusagen: [], msgs: [], users: {}, lastSeen: {}, adminHash: null, userIds: {}, confirmedManual: {} }, 
     filters = {companion: null}, isAdminMode = false, activeChat = "Alle";
 
 window.onload = async () => {
@@ -151,11 +154,7 @@ window.onload = async () => {
         filters.companion = CloudDB.userIds[id];
         activeChat = "Admin";
         document.getElementById("loginTitle").innerText = "Moin, " + filters.companion;
-        document.getElementById("loginDesc").innerText = "SIMULATIONS-MODUS AKTIV";
-        // Simulieren wir einen automatischen Login im Testmodus
-        if(params.get('mode') === 'view') {
-            showApp(false);
-        }
+        if(params.get('mode') === 'view') { showApp(false); }
     }
 };
 
@@ -167,7 +166,7 @@ async function hash(str) {
 
 async function handleAuth() {
     const pw = document.getElementById("passInput").value;
-    if(!pw) return alert("Passwort fehlt!");
+    if(!pw) return alert("Eingabe fehlt!");
     const pwHash = await hash(pw);
     const targetAdminHash = CloudDB.adminHash || FALLBACK_ADMIN_HASH;
 
@@ -176,7 +175,10 @@ async function handleAuth() {
         showApp(true); return; 
     }
     if(filters.companion && (!CloudDB.users[filters.companion] || CloudDB.users[filters.companion] === pwHash)) {
-        if(!CloudDB.users[filters.companion]) { CloudDB.users[filters.companion] = pwHash; await saveToCloud(); }
+        if(!CloudDB.users[filters.companion]) { CloudDB.users[filters.companion] = pwHash; }
+        // Last Seen Tracker
+        CloudDB.lastSeen[filters.companion] = Date.now();
+        await saveToCloud();
         showApp(false);
     } else { alert("Passwort falsch!"); }
 }
@@ -188,7 +190,6 @@ async function showApp(isAdmin) {
     if(isAdmin) {
         document.getElementById("adminTools").style.display = "block";
         document.getElementById("adminSections").style.display = "grid";
-        document.getElementById("tickerLabel").innerText = "Zeit seit dem letzten Stadionbesuch (Global)";
     }
     render();
     renderMessages();
@@ -199,9 +200,9 @@ async function refreshData() {
         const [resExcel, resCloud] = await Promise.all([fetch('daten.json?v=' + Date.now()), fetch(DB_URL)]);
         const excelJson = await resExcel.json();
         CloudDB = await resCloud.json();
+        if(!CloudDB.lastSeen) CloudDB.lastSeen = {};
         if(!CloudDB.confirmedManual) CloudDB.confirmedManual = {};
         if(!CloudDB.msgs) CloudDB.msgs = [];
-        if(!CloudDB.zusagen) CloudDB.zusagen = [];
         data = excelJson.map(r => ({
             fD: parseFixDate(r["Datum"] || r["datum"], r["Uhrzeit"] || r["uhrzeit"]),
             datum: r["Datum"] || r["datum"], gegner: r["Gegner"], ort: (r["Ort"] || "H").toUpperCase(), 
@@ -254,13 +255,8 @@ async function approve(date, user) {
     await saveToCloud(); render();
 }
 
-async function submitZusage(date) {
-    CloudDB.zusagen.push({ user: filters.companion, date: date });
-    await saveToCloud(); render();
-}
-
 function render() {
-    const now = new Date();
+    const now = Date.now();
     data.sort((a,b) => b.fD - a.fD);
     
     const comps = {};
@@ -273,12 +269,27 @@ function render() {
     if(isAdminMode) {
         const sortedComps = Object.entries(comps).sort((a,b) => b[1] - a[1]);
         document.getElementById("companionTable").querySelector("tbody").innerHTML = sortedComps.map(([n, s]) => `<tr><td>${n}</td><td style="text-align:center">${s}x</td></tr>`).join("");
+        
         const allNames = Object.keys(comps).sort();
         document.getElementById("companionSelect").innerHTML = allNames.map(n => `<option value="${n}">${n}</option>`).join("");
+        
         document.getElementById("userTable").querySelector("tbody").innerHTML = allNames.map(u => {
             const id = Object.keys(CloudDB.userIds).find(k => CloudDB.userIds[k] === u);
+            const lastTime = CloudDB.lastSeen[u];
+            let status = '<span class="status-badge no-pw">KEIN PASSWORT</span>';
+            let timeStr = "";
+
+            if(CloudDB.users[u]) {
+                const diff = (now - lastTime) / 1000;
+                if(diff < 300) { status = '<span class="status-badge online">ONLINE</span>'; }
+                else { 
+                    status = '<span class="status-badge offline">OFFLINE</span>';
+                    timeStr = lastTime ? `<br><small>${new Date(lastTime).toLocaleString()}</small>` : "";
+                }
+            }
+
             const viewBtn = id ? `<button class="btn-view" onclick="switchToUser('${id}')">VIEW</button>` : '';
-            return `<tr><td>${u}</td><td style="text-align:center">${CloudDB.users[u] ? '✅ Aktiv' : '⏳ Wartend'}</td><td>${viewBtn}<button onclick="resetUser('${u}')" style="background:var(--red); color:white; border:none; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td></tr>`;
+            return `<tr><td><b>${u}</b></td><td>${status}${timeStr}</td><td>${viewBtn}<button onclick="resetUser('${u}')" style="background:var(--red); border:none; color:white; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td></tr>`;
         }).join("");
     }
 
@@ -294,7 +305,7 @@ function render() {
             const requests = CloudDB.zusagen.filter(z => z.date === m.datum).map(z => z.user);
             if(isAdminMode) {
                 statusHtml = confirmed.map(n => `<span class="tag-confirmed">${n}</span>`).join("") + 
-                             requests.map(n => `<span class="tag-request">${n} <button class="btn-check" onclick="approve('${m.datum}','${n}')">✔</button></span>`).join("");
+                             requests.map(n => `<span class="tag-request">${n} <button onclick="approve('${m.datum}','${n}')" style="cursor:pointer; border:none; background:#fff; border-radius:3px; color:green; font-weight:bold;">✔</button></span>`).join("");
             } else {
                 if(confirmed.includes(filters.companion)) statusHtml = '<span class="tag-confirmed">BESTÄTIGT ✅</span>';
                 else if(requests.includes(filters.companion)) statusHtml = '<span class="tag-request">ANGEFRAGT... ⏳</span>';
@@ -304,46 +315,42 @@ function render() {
         return `<tr><td>${m.datum}</td><td>${m.ort}</td><td>${m.gegner}</td><td>${m.played?m.tK+':'+m.tG:'-:-'}</td><td>${statusHtml}</td></tr>`;
     }).join("");
 
-    const userHistory = data.filter(m => m.played && (m.begleiter.split(/,| und /).includes(filters.companion) || (CloudDB.confirmedManual[m.datum] && CloudDB.confirmedManual[m.datum].includes(filters.companion))));
+    const userHistory = data.filter(m => m.played && confirmedCheck(m, filters.companion));
     const lastMatch = isAdminMode ? data.filter(m => m.played)[0] : userHistory[0];
     if(lastMatch) {
         const last = lastMatch.fD;
         const tick = () => {
-            const diff = Math.max(0, new Date() - last);
+            const diff = Math.max(0, Date.now() - last);
             const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
             document.getElementById("liveTicker").innerText = `${d}t ${h}h ${m}m ${s}s`;
         };
         tick(); setInterval(tick, 1000);
     }
-
     document.getElementById("statCount").innerText = isAdminMode ? data.filter(m => m.played).length : userHistory.length;
     document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
     document.getElementById("statReqs").innerText = CloudDB.zusagen.length;
+    document.getElementById("statID").innerText = filters.companion ? (Object.keys(CloudDB.userIds).find(k => CloudDB.userIds[k] === filters.companion) || "-") : "ADMIN";
 }
 
-function switchToUser(id) {
-    window.location.href = window.location.pathname + "?id=" + id + "&mode=view";
+function confirmedCheck(m, user) {
+    const manual = CloudDB.confirmedManual[m.datum] || [];
+    const confirmed = [...new Set([...m.begleiter.split(/,| und /).map(n => n.trim()), ...manual])];
+    return confirmed.includes(user);
 }
 
-async function resetUser(u) {
-    if(confirm(`User ${u} zurücksetzen?`)) {
-        delete CloudDB.users[u];
-        let id = Object.keys(CloudDB.userIds).find(k => CloudDB.userIds[k] === u);
-        if(id) delete CloudDB.userIds[id];
-        await saveToCloud(); render();
-    }
-}
-
+function switchToUser(id) { window.location.href = window.location.pathname + "?id=" + id + "&mode=view"; }
+async function resetUser(u) { if(confirm(`${u} zurücksetzen?`)) { delete CloudDB.users[u]; let id = Object.keys(CloudDB.userIds).find(k => CloudDB.userIds[k] === u); if(id) delete CloudDB.userIds[id]; await saveToCloud(); render(); } }
 async function saveToCloud() { await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(CloudDB) }); }
+async function submitZusage(date) { CloudDB.zusagen.push({ user: filters.companion, date: date }); await saveToCloud(); render(); }
 function logout() { window.location.href = window.location.pathname; }
 async function copyLink() {
     const name = document.getElementById("companionSelect").value;
     let id = Object.keys(CloudDB.userIds).find(key => CloudDB.userIds[key] === name) || Math.random().toString(36).substr(2, 6);
     CloudDB.userIds[id] = name; await saveToCloud();
     navigator.clipboard.writeText(window.location.origin + window.location.pathname + "?id=" + id);
-    alert("Link für " + name + " kopiert!");
+    alert("Link kopiert!");
 }
-async function clearCloud() { if(confirm("RESET?")) { CloudDB={zusagen:[],msgs:[],users:{},adminHash:null,userIds:{},confirmedManual:{}}; await saveToCloud(); location.reload(); } }
+async function clearCloud() { if(confirm("RESET ALL?")) { CloudDB={zusagen:[],msgs:[],users:{},adminHash:null,userIds:{},confirmedManual:{},lastSeen:{}}; await saveToCloud(); location.reload(); } }
 </script>
 </body>
 </html>
