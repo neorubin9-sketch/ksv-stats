@@ -170,7 +170,10 @@ function parseFixDate(dStr, tStr) {
     if (!dStr) return new Date();
     let clean = dStr.replace(/^[a-zA-Z]{2,3},\s/, '').trim();
     const parts = clean.split(/[./]/);
-    let dO = parts.length === 3 ? new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0])) : new Date(clean);
+    let dO;
+    if (parts.length === 3) {
+        dO = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    } else { dO = new Date(clean); }
     if (tStr && tStr.includes(':')) { const tp = tStr.split(':'); dO.setHours(tp[0], tp[1], 0, 0); }
     else { dO.setHours(15, 30, 0, 0); }
     return dO;
@@ -199,9 +202,6 @@ function render() {
         if (gaps.length > 0) {
             document.getElementById("statMax").innerText = Math.max(...gaps) + " T.";
             document.getElementById("statGap").innerText = (gaps.reduce((a,b)=>a+b,0)/gaps.length).toFixed(0) + " T.";
-        } else {
-            document.getElementById("statMax").innerText = "0 T.";
-            document.getElementById("statGap").innerText = "0 T.";
         }
         document.getElementById("statFreq").innerText = (Math.floor((now - firstVisit)/86400000) / relevant.length).toFixed(0) + " T.";
 
@@ -222,6 +222,7 @@ function render() {
         const requests = ZusagenCloud.filter(z => z.date === m.datum).map(z => z.user);
         const hasRequested = requests.includes(filters.companion);
 
+        // KORREKTUR FILTER: Zeige im Begleiter-Profil nur eigene vergangene Spiele, aber ALLE zukünftigen Spiele an
         if(filters.companion && !isConfirmed && !isFuture) return "";
 
         let nameDisplayHtml = "";
@@ -238,7 +239,7 @@ function render() {
         }
 
         return `<tr class="${isFuture ? 'future-row' : ''}">
-            <td style="font-size:0.7rem">${m.datum}</td><td><span style="font-size:8px; padding:2px 4px; background:#334155; border-radius:3px;">${m.ort}</span></td>
+            <td style="font-size:0.7rem">${m.datum}</td><td><span class="ort-tag">${m.ort}</span></td>
             <td style="text-align:right"><b>${m.ort=='H'?m.meinVerein:m.gegner}</b> <img src="${m.ort=='H'?m.meinVerein:m.gegner}.png" class="logo-img" onerror="this.style.display='none'"></td>
             <td><div class="score-box">${m.played && !isFuture ? (m.ort=='H'?m.tK+':'+m.tG:m.tG+':'+m.tK) : '-:-'}</div></td>
             <td style="text-align:left"><img src="${m.ort=='A'?m.meinVerein:m.gegner}.png" class="logo-img" onerror="this.style.display='none'"> <b>${m.ort=='A'?m.meinVerein:m.gegner}</b></td>
@@ -246,10 +247,8 @@ function render() {
         </tr>`;
     }).join("");
 
-    // BEGLEITER DROPDOWN & TABELLE BEFÜLLEN
     if(!filters.companion) {
         const comps = {};
-        // Alle Begleiter aus allen Spielen sammeln
         data.forEach(m => {
             if(!m.begleiter) return;
             m.begleiter.split(/,| und /).forEach(n => {
@@ -262,10 +261,8 @@ function render() {
                 }
             });
         });
-
         const sortedNames = Object.keys(comps).sort();
         document.getElementById("companionSelect").innerHTML = '<option value="">Wähle Name...</option>' + sortedNames.map(n => `<option value="${n}">${n}</option>`).join("");
-        
         document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps).sort((a,b)=>b[1].sp - a[1].sp).map(([n, s]) => `
             <tr onclick="window.location.href='?user=${encodeURIComponent(n)}'" style="cursor:pointer;">
                 <td style="padding:10px; font-weight:bold; text-align:left;">${n}</td>
@@ -282,7 +279,7 @@ async function submitZusage(datum) {
     try {
         await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ zusagen: ZusagenCloud }) });
         alert("Anfrage gesendet!"); refreshData();
-    } catch(e) { alert("Fehler beim Senden!"); }
+    } catch(e) { alert("Fehler!"); }
 }
 
 async function clearCloud() {
@@ -294,9 +291,9 @@ async function clearCloud() {
 
 function copyLink() {
     const name = document.getElementById("companionSelect").value;
-    if(!name) return alert("Bitte wähle einen Begleiter!");
+    if(!name) return alert("Wähle einen Begleiter!");
     const url = window.location.href.split('?')[0] + "?user=" + encodeURIComponent(name);
-    navigator.clipboard.writeText(url).then(() => alert("Link für " + name + " kopiert!"));
+    navigator.clipboard.writeText(url).then(() => alert("Link kopiert!"));
 }
 function logout() { window.location.href = window.location.pathname; }
 </script>
