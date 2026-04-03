@@ -42,7 +42,7 @@
   .tag-confirmed { background: var(--win); color: #000; }
   .tag-request { background: var(--amber); color: #000; font-style: italic; }
   
-  .btn-mini { border:none; border-radius:4px; padding:2px 5px; cursor:pointer; font-size: 0.6rem; font-weight: 900; }
+  .btn-mini { border:none; border-radius:4px; padding:2px 6px; cursor:pointer; font-size: 0.7rem; font-weight: 900; margin-left: 5px; }
   .btn-ok { background: #fff; color: var(--win); }
   .btn-no { background: #fff; color: var(--red); }
 
@@ -74,13 +74,13 @@
     <div style="display:flex; gap:10px; flex-wrap: wrap;">
         <select id="companionSelect" style="margin:0; flex:1; min-width: 200px;"></select>
         <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
-        <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">ALLE LÖSCHEN</button>
+        <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET REQUESTS</button>
     </div>
   </div>
 
   <div class="ticker-card">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div id="tickerLabel" style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Seit dem letzten Besuch</div>
+    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Seit deinem letzten Stadionbesuch</div>
   </div>
 
   <div class="stats-bar">
@@ -129,7 +129,7 @@ function checkLogin() {
     if(document.getElementById("passInput").value === ADMIN_PASSWORD) {
         isAdminMode = true;
         showApp(true);
-    } else alert("Falsches Passwort!");
+    } else alert("Passwort falsch!");
 }
 
 async function showApp(isAdmin) {
@@ -224,7 +224,6 @@ function render() {
                 actionHtml = '<span class="st-dot"></span> Dabei';
             }
         } else {
-            // ADMIN ANSICHT MIT ANNEHMEN/ABLEHNEN
             let tags = confirmedList.filter(n => n && n.toLowerCase() !== 'nicht im stadion').map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("");
             let reqs = requests.filter(n => !confirmedList.includes(n)).map(n => `
                 <span class="name-tag tag-request">
@@ -266,12 +265,10 @@ function render() {
     }
 }
 
-// ADMIN LOGIK: ANFRAGE BEARBEITEN
 async function handleAdminRequest(datum, user, accept) {
     if(accept) {
-        alert(`${user} wurde für den ${datum} vorgemerkt.\n\nBITTE JETZT IN DEINER EXCEL EINTRAGEN UND HOCHLADEN!`);
+        alert(`${user} für ${datum} akzeptiert.\n\nTRAGE IHN JETZT IN DEINE EXCEL EIN!`);
     }
-    // In jedem Fall: Anfrage aus der Cloud-Liste entfernen
     ZusagenCloud = ZusagenCloud.filter(z => !(z.date === datum && z.user === user));
     await saveToCloud();
     refreshData();
@@ -294,7 +291,7 @@ async function saveToCloud() {
 }
 
 async function clearCloud() {
-    if(confirm("Alle offenen Anfragen löschen?")) {
+    if(confirm("Alle offenen Anfragen unwiderruflich löschen?")) {
         ZusagenCloud = [];
         await saveToCloud();
         refreshData();
