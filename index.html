@@ -16,10 +16,11 @@
 
   #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
   .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-  input[type="password"], input[type="text"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; text-align: center; }
-  .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
+  input[type="password"] { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 15px; border-radius: 10px; width: 100%; margin-bottom: 20px; text-align: center; font-size: 1.1rem; }
+  .btn-action { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; font-size: 1rem; }
   
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
+  .admin-panel { background: rgba(96, 165, 250, 0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--blue); margin-bottom: 20px; }
   .msg-center { background: var(--card); border: 1px solid var(--blue); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
   .msg-list { max-height: 150px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
   .msg-item { padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; border-left: 4px solid var(--blue); background: rgba(255,255,255,0.03); }
@@ -29,8 +30,6 @@
   .stat-mini span { display: block; font-size: 0.75rem; color: var(--text-dim); }
   .stat-mini b { display: block; font-size: 1.1rem; color: #fff; margin-top: 10px; }
 
-  .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-  @media (min-width: 1200px) { .main-grid { grid-template-columns: 1.8fr 1.2fr; } }
   .table-container { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid var(--border); overflow-x: auto; }
   .match-table { width:100%; border-collapse:collapse; min-width: 600px; }
   .match-table td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
@@ -46,11 +45,10 @@
 
 <div id="loginOverlay">
     <div class="login-box">
-        <h2 id="loginTitle">Admin Login</h2>
-        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Master-Passwort (KSV) erforderlich.</p>
-        <input type="password" id="passInput" placeholder="Passwort...">
+        <h2 id="loginTitle">KSV Dashboard</h2>
+        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Passwort erforderlich.</p>
+        <input type="password" id="passInput" placeholder="Passwort eingeben...">
         <button class="btn-action" onclick="handleAuth()">LOGIN</button>
-        <button id="adminToggleBtn" style="background:none; border:none; color:var(--text-dim); font-size:0.7rem; margin-top:15px; cursor:pointer;" onclick="toggleLoginMode()">Zum Begleiter-Login wechseln</button>
     </div>
 </div>
 
@@ -58,7 +56,7 @@
   <div class="header">
     <div>
         <h2 id="viewTitle">KSV LIVE MANAGER</h2>
-        <div id="statusInfo">Synchronisierung...</div>
+        <div id="statusInfo">Daten synchron...</div>
     </div>
     <button class="btn-action" style="width:auto; background:var(--red)" onclick="logout()">LOGOUT</button>
   </div>
@@ -83,7 +81,7 @@
 
   <div class="ticker-card" style="background: var(--card); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border);">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase; text-align:center;">Zeit ohne Stadionbesuch</div>
+    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase; text-align:center;">Abwesenheit vom Stadion</div>
   </div>
 
   <div class="stats-bar">
@@ -93,42 +91,39 @@
     <div class="stat-mini"><span>Zuletzt vor</span><b id="statDays">-</b></div>
   </div>
 
-  <div class="main-grid">
+  <div class="table-container">
+    <h3>📅 SPIELPLAN</h3>
+    <table class="match-table" id="matchTable">
+      <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Aktion</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  
+  <div id="adminSections" style="display:none; margin-top:20px; display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
     <div class="table-container">
-      <h3>📅 SPIELPLAN</h3>
-      <table class="match-table" id="matchTable">
-        <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Aktion</th></tr></thead>
-        <tbody></tbody>
-      </table>
+        <h3>👤 RANKING</h3>
+        <table id="companionTable" style="width:100%; border-collapse:collapse;">
+          <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>NAME</th><th>SPIELE</th><th>ZULETZT</th></tr></thead>
+          <tbody></tbody>
+        </table>
     </div>
-    
-    <div style="display:flex; flex-direction:column; gap:20px;">
-        <div class="table-container">
-            <h3>👤 BEGLEITER-RANKING</h3>
-            <table id="companionTable" style="width:100%; border-collapse:collapse;">
-              <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>NAME</th><th>SPIELE</th><th>ZULETZT</th></tr></thead>
-              <tbody></tbody>
-            </table>
-        </div>
-
-        <div class="table-container" id="userManagementSection" style="display:none; border: 1px solid var(--blue);">
-            <h3 style="color:#60a5fa">🔑 BENUTZER-STATUS</h3>
-            <table id="userTable" style="width:100%; border-collapse:collapse;">
-                <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>BEGLEITER</th><th>STATUS</th><th>AKTION</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
+    <div class="table-container" style="border: 1px solid var(--blue);">
+        <h3 style="color:#60a5fa">🔑 USER-STATUS</h3>
+        <table id="userTable" style="width:100%; border-collapse:collapse;">
+            <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>BEGLEITER</th><th>STATUS</th><th>AKTION</th></tr></thead>
+            <tbody></tbody>
+        </table>
     </div>
   </div>
 </div>
 
 <script>
-// Hash für "KSV"
+// Master-Hash für "KSV"
 const ADMIN_HASH = "80f84501a359739070381373516422d369f688034d6f6e52003c200676450f3b"; 
 const NPOINT_ID = "15abfbbebe2742f743b2"; 
 const DB_URL = `https://api.npoint.io/${NPOINT_ID}`;
 
-let data = [], CloudDB = { zusagen: [], msgs: [], users: {} }, filters = {companion: null}, isAdminMode = true;
+let data = [], CloudDB = { zusagen: [], msgs: [], users: {} }, filters = {companion: null}, isAdminMode = false;
 
 window.onload = async () => {
     const params = new URLSearchParams(window.location.search);
@@ -136,11 +131,13 @@ window.onload = async () => {
     await refreshData();
 
     if(user) {
-        isAdminMode = false;
         filters.companion = decodeURIComponent(user);
-        document.getElementById("adminToggleBtn").style.display = "none";
-        document.getElementById("loginTitle").innerText = "Login: " + filters.companion;
-        document.getElementById("loginDesc").innerText = CloudDB.users[filters.companion] ? "Bitte persönliches Passwort eingeben." : "Account ungeschützt. Erstelle ein Passwort:";
+        document.getElementById("loginTitle").innerText = "Moin, " + filters.companion;
+        if(!CloudDB.users[filters.companion]) {
+            document.getElementById("loginDesc").innerText = "Lege jetzt dein persönliches Passwort fest:";
+        } else {
+            document.getElementById("loginDesc").innerText = "Bitte dein persönliches Passwort eingeben.";
+        }
     }
 };
 
@@ -152,43 +149,34 @@ async function hash(str) {
 
 async function handleAuth() {
     const pw = document.getElementById("passInput").value;
-    if(!pw) return alert("Passwort fehlt!");
+    if(!pw) return alert("Eingabe fehlt!");
     const pwHash = await hash(pw);
 
-    // ADMIN LOGIN CHECK
-    if(isAdminMode) {
-        if(pwHash === ADMIN_HASH) {
-            showApp(true);
-        } else {
-            alert("Admin-Passwort falsch! (Master-PW ist KSV)");
-        }
+    // 1. Check: Ist es das Admin-Passwort?
+    if(pwHash === ADMIN_HASH) {
+        showApp(true);
         return;
     }
 
-    // BEGLEITER LOGIN CHECK
-    if(!filters.companion) return alert("Fehler: Kein Benutzername!");
-    
-    if(!CloudDB.users[filters.companion]) {
-        CloudDB.users[filters.companion] = pwHash;
-        await saveToCloud();
-        alert("Passwort für " + filters.companion + " gespeichert!");
-        showApp(false);
-    } else {
-        if(CloudDB.users[filters.companion] === pwHash) {
+    // 2. Check: Ist ein Begleiter über einen Link da?
+    if(filters.companion) {
+        if(!CloudDB.users[filters.companion]) {
+            // Erstmalige Registrierung
+            CloudDB.users[filters.companion] = pwHash;
+            await saveToCloud();
+            alert("Passwort für " + filters.companion + " erfolgreich gesetzt!");
             showApp(false);
         } else {
-            alert("Persönliches Passwort für " + filters.companion + " ist falsch!");
+            // Normaler User Login
+            if(CloudDB.users[filters.companion] === pwHash) {
+                showApp(false);
+            } else {
+                alert("Falsches Passwort!");
+            }
         }
+    } else {
+        alert("Falsches Passwort oder kein Benutzer-Link genutzt!");
     }
-}
-
-function toggleLoginMode() {
-    isAdminMode = !isAdminMode;
-    const input = document.getElementById("passInput");
-    input.value = "";
-    document.getElementById("loginTitle").innerText = isAdminMode ? "Admin Login" : "Begleiter Login";
-    document.getElementById("loginDesc").innerText = isAdminMode ? "Master-Passwort (KSV) erforderlich." : "Bitte persönliches Passwort eingeben.";
-    document.getElementById("adminToggleBtn").innerText = isAdminMode ? "Zum Begleiter-Login wechseln" : "Als Admin anmelden";
 }
 
 async function showApp(isAdmin) {
@@ -197,8 +185,8 @@ async function showApp(isAdmin) {
     document.getElementById("mainApp").style.display = "block";
     if(isAdmin) {
         document.getElementById("adminTools").style.display = "block";
+        document.getElementById("adminSections").style.display = "grid";
         document.getElementById("msgTarget").style.display = "block";
-        document.getElementById("userManagementSection").style.display = "block";
     } else {
         document.getElementById("viewTitle").innerText = "Moin, " + filters.companion;
     }
@@ -221,7 +209,7 @@ async function refreshData() {
             ort: (r["Ort"] || "H").toUpperCase(), tK: r["Tore Kiel"] || "", tG: r["Tore Gegner"] || "",
             played: r["Status"] === "Abgeschlossen", begleiter: (r["Begleiter"] || "").trim()
         }));
-    } catch(e) { console.error("Sync-Fehler", e); }
+    } catch(e) { console.error(e); }
 }
 
 function parseFixDate(d, t) {
@@ -285,7 +273,6 @@ function render() {
             action = conf.map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("") + 
                      reqs.map(n => `<span class="name-tag tag-request">? ${n} <button onclick="handleReq('${m.datum}','${n}')" style="cursor:pointer">✔</button></span>`).join("");
         }
-
         return `<tr><td>${m.datum}</td><td>${m.ort}</td><td style="text-align:right">${h}</td><td>${m.played?m.tK+':'+m.tG:'-:-'}</td><td style="text-align:left">${g}</td><td>${action}</td></tr>`;
     }).join("");
     
