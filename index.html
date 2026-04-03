@@ -16,8 +16,8 @@
 
   #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
   .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-  input[type="password"] { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 15px; border-radius: 10px; width: 100%; margin-bottom: 20px; text-align: center; font-size: 1.1rem; }
-  .btn-action { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; font-size: 1rem; }
+  input[type="password"], input[type="text"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; text-align: center; }
+  .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
   
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
   .admin-panel { background: rgba(96, 165, 250, 0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--blue); margin-bottom: 20px; }
@@ -30,6 +30,8 @@
   .stat-mini span { display: block; font-size: 0.75rem; color: var(--text-dim); }
   .stat-mini b { display: block; font-size: 1.1rem; color: #fff; margin-top: 10px; }
 
+  .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+  @media (min-width: 1200px) { .main-grid { grid-template-columns: 1.8fr 1.2fr; } }
   .table-container { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid var(--border); overflow-x: auto; }
   .match-table { width:100%; border-collapse:collapse; min-width: 600px; }
   .match-table td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
@@ -46,8 +48,8 @@
 <div id="loginOverlay">
     <div class="login-box">
         <h2 id="loginTitle">KSV Dashboard</h2>
-        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Initialisierung...</p>
-        <input type="password" id="passInput" placeholder="Passwort...">
+        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Wird geladen...</p>
+        <input type="password" id="passInput" placeholder="Passwort eingeben...">
         <button class="btn-action" onclick="handleAuth()">LOGIN</button>
     </div>
 </div>
@@ -81,7 +83,7 @@
 
   <div class="ticker-card" style="background: var(--card); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border);">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase; text-align:center;">Zeit ohne Stadionbesuch</div>
+    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase; text-align:center;">Abwesenheit vom Stadion</div>
   </div>
 
   <div class="stats-bar">
@@ -110,7 +112,7 @@
     <div class="table-container" style="border: 1px solid var(--blue);">
         <h3 style="color:#60a5fa">🔑 USER-STATUS</h3>
         <table id="userTable" style="width:100%; border-collapse:collapse;">
-            <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>BEGLEITER</th><th>STATUS</th><th>AKTION</th></tr></thead>
+            <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>BEGLEITER</th><th>ID-LINK</th><th>AKTION</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
@@ -118,18 +120,20 @@
 </div>
 
 <script>
+// Master-Hash für "KSV" (Falls Cloud leer)
+const FALLBACK_ADMIN_HASH = "80f84501a359739070381373516422d369f688034d6f6e52003c200676450f3b"; 
 const NPOINT_ID = "15abfbbebe2742f743b2"; 
 const DB_URL = `https://api.npoint.io/${NPOINT_ID}`;
 
-let data = [], CloudDB = { zusagen: [], msgs: [], users: {}, adminHash: null }, filters = {companion: null}, isAdminMode = false;
+let data = [], CloudDB = { zusagen: [], msgs: [], users: {}, adminHash: null, userIds: {} }, filters = {companion: null}, isAdminMode = false;
 
 window.onload = async () => {
-    const params = new URLSearchParams(window.location.search);
-    const user = params.get('user');
     await refreshData();
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
 
-    if(user) {
-        filters.companion = decodeURIComponent(user);
+    if(id && CloudDB.userIds[id]) {
+        filters.companion = CloudDB.userIds[id];
         document.getElementById("loginTitle").innerText = "Moin, " + filters.companion;
         document.getElementById("loginDesc").innerText = CloudDB.users[filters.companion] ? "Bitte dein Passwort eingeben." : "Noch kein Passwort gesetzt. Lege jetzt eines fest:";
     } else {
@@ -146,39 +150,32 @@ async function hash(str) {
 
 async function handleAuth() {
     const pw = document.getElementById("passInput").value;
-    if(!pw) return alert("Bitte Passwort eingeben!");
+    if(!pw) return alert("Eingabe fehlt!");
     const pwHash = await hash(pw);
 
-    // Wenn kein User in der URL steht -> Admin Modus
-    if(!filters.companion) {
-        if(!CloudDB.adminHash) {
-            // Master Passwort zum ersten Mal setzen
-            CloudDB.adminHash = pwHash;
-            await saveToCloud();
-            alert("Master-Passwort erfolgreich erstellt!");
-            showApp(true);
-        } else {
-            if(pwHash === CloudDB.adminHash) {
-                showApp(true);
-            } else {
-                alert("Falsches Admin-Passwort!");
-            }
-        }
+    // 1. Check: Admin?
+    const targetAdminHash = CloudDB.adminHash || FALLBACK_ADMIN_HASH;
+    if(pwHash === targetAdminHash) {
+        showApp(true);
         return;
     }
 
-    // Begleiter Modus
-    if(!CloudDB.users[filters.companion]) {
-        CloudDB.users[filters.companion] = pwHash;
-        await saveToCloud();
-        alert("Passwort für " + filters.companion + " gesetzt!");
-        showApp(false);
-    } else {
-        if(CloudDB.users[filters.companion] === pwHash) {
+    // 2. Check: Begleiter?
+    if(filters.companion) {
+        if(!CloudDB.users[filters.companion]) {
+            CloudDB.users[filters.companion] = pwHash;
+            await saveToCloud();
+            alert("Passwort für " + filters.companion + " gesetzt!");
             showApp(false);
         } else {
-            alert("Falsches Passwort!");
+            if(CloudDB.users[filters.companion] === pwHash) {
+                showApp(false);
+            } else {
+                alert("Falsches Passwort!");
+            }
         }
+    } else {
+        alert("Falsches Passwort oder ungültiger Link!");
     }
 }
 
@@ -201,9 +198,8 @@ async function refreshData() {
         const [resExcel, resCloud] = await Promise.all([fetch('daten.json?v=' + Date.now()), fetch(DB_URL)]);
         const excelJson = await resExcel.json();
         CloudDB = await resCloud.json();
-        
-        // Initial-Struktur falls npoint leer ist
         if(!CloudDB.users) CloudDB.users = {};
+        if(!CloudDB.userIds) CloudDB.userIds = {};
         if(!CloudDB.zusagen) CloudDB.zusagen = [];
         if(!CloudDB.msgs) CloudDB.msgs = [];
 
@@ -251,12 +247,16 @@ function render() {
         const sn = Object.keys(comps).sort();
         document.getElementById("companionSelect").innerHTML = sn.map(n => `<option value="${n}">${n}</option>`).join("");
         document.getElementById("msgTarget").innerHTML = '<option value="Alle">An Alle</option>' + sn.map(n => `<option value="${n}">${n}</option>`).join("");
-        document.getElementById("userTable").querySelector("tbody").innerHTML = sn.map(u => `
+        document.getElementById("userTable").querySelector("tbody").innerHTML = sn.map(u => {
+            // Finde ID für den User oder erstelle eine neue
+            let existingId = Object.keys(CloudDB.userIds).find(key => CloudDB.userIds[key] === u);
+            return `
             <tr>
                 <td style="text-align:left; padding:8px;"><b>${u}</b></td>
-                <td>${CloudDB.users[u] ? '<span class="tag-registered">REGISTRIERT</span>' : '<span class="tag-pending">WARTEND</span>'}</td>
-                <td>${CloudDB.users[u] ? `<button onclick="resetPW('${u}')" style="background:var(--red); color:white; border:none; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button>` : '-'}</td>
-            </tr>`).join("");
+                <td><span style="font-size:9px; color:var(--text-dim)">${existingId || 'Kein Link'}</span></td>
+                <td><button onclick="resetPW('${u}')" style="background:var(--red); color:white; border:none; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td>
+            </tr>`;
+        }).join("");
     }
 
     const tbody = document.getElementById("matchTable").querySelector("tbody");
@@ -282,14 +282,41 @@ function render() {
     
     document.getElementById("companionTable").querySelector("tbody").innerHTML = sortedComps.map(([n,s])=>`<tr><td>${n}</td><td>${s.sp}x</td><td>${Math.floor((now-s.last)/86400000)}T.</td></tr>`).join("");
     document.getElementById("statCount").innerText = playedPast.length;
-    document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
 }
 
 async function saveToCloud() { await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(CloudDB) }); }
-async function resetPW(u) { if(confirm(`PW für ${u} löschen?`)) { delete CloudDB.users[u]; await saveToCloud(); render(); } }
+
+function generateId() { return Math.random().toString(36).substr(2, 6); }
+
+async function copyLink() {
+    const name = document.getElementById("companionSelect").value;
+    if(!name) return alert("Wähle einen Namen!");
+    
+    // Prüfe ob User schon ID hat, sonst erstelle eine
+    let id = Object.keys(CloudDB.userIds).find(key => CloudDB.userIds[key] === name);
+    if(!id) {
+        id = generateId();
+        CloudDB.userIds[id] = name;
+        await saveToCloud();
+        render(); // Update User-Status Tabelle
+    }
+    
+    const url = window.location.origin + window.location.pathname + "?id=" + id;
+    navigator.clipboard.writeText(url).then(() => alert("Kryptischer Link kopiert!"));
+}
+
+async function resetPW(u) {
+    if(confirm(`Passwort & ID für ${u} löschen?`)) {
+        delete CloudDB.users[u];
+        let id = Object.keys(CloudDB.userIds).find(key => CloudDB.userIds[key] === u);
+        if(id) delete CloudDB.userIds[id];
+        await saveToCloud();
+        render();
+    }
+}
+
 function logout() { window.location.href = window.location.pathname; }
-function copyLink() { navigator.clipboard.writeText(window.location.origin + window.location.pathname + "?user=" + encodeURIComponent(document.getElementById("companionSelect").value)); alert("Link kopiert!"); }
-async function clearCloud() { if(confirm("RESET?")) { CloudDB={zusagen:[],msgs:[],users:{}, adminHash:null}; await saveToCloud(); location.reload(); } }
+async function clearCloud() { if(confirm("RESET?")) { CloudDB={zusagen:[],msgs:[],users:{}, adminHash:null, userIds:{}}; await saveToCloud(); location.reload(); } }
 </script>
 </body>
 </html>
