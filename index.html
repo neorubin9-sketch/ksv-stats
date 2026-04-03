@@ -16,16 +16,15 @@
 
   #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
   .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-  input[type="password"], input[type="text"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; text-align: center; }
+  input[type="password"], input[type="text"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; text-align: center; font-size: 16px; } /* 16px verhindert Zoom am iPhone */
   .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
   
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
-  
   .msg-center { background: var(--card); border: 1px solid var(--blue); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
   .msg-layout { display: grid; grid-template-columns: 220px 1fr; gap: 15px; min-height: 350px; }
   @media (max-width: 768px) { .msg-layout { grid-template-columns: 1fr; } }
   .msg-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 400px; padding-right: 10px; }
-  .chat-tab { padding: 12px; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.03); font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; }
+  .chat-tab { padding: 12px; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.03); font-size: 0.85rem; border: 1px solid transparent; }
   .chat-tab.active { background: var(--blue); border-color: #60a5fa; }
   .msg-content { display: flex; flex-direction: column; background: rgba(15, 23, 42, 0.5); border-radius: 15px; padding: 15px; border: 1px solid var(--border); }
   .msg-list { flex: 1; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
@@ -37,19 +36,19 @@
   .table-container { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid var(--border); overflow-x: auto; margin-bottom: 20px; }
   .match-table { width:100%; border-collapse:collapse; min-width: 600px; }
   .match-table td, .match-table th { padding: 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-  .tag-confirmed { background: var(--win); color: #000; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; margin: 2px; display: inline-block; }
-  .tag-request { background: var(--amber); color: #000; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; margin: 2px; display: inline-flex; align-items: center; gap: 5px; }
+  .tag-confirmed { background: var(--win); color: #000; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; }
+  .tag-request { background: var(--amber); color: #000; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; }
   
   .status-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
-  .online { background: var(--win); color: #000; animation: pulse 2s infinite; }
-  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+  .online { background: var(--win); color: #000; }
+  .no-pw { background: var(--red); color: #fff; }
 
   .ticker-card { background: var(--card); padding: 25px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center; }
   .ticker-val { font-size: 2.8rem; font-weight: 900; color: #fff; margin-bottom: 5px; }
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
   .stat-mini { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
   .stat-mini b { display: block; font-size: 1.3rem; color: #fff; margin-top: 5px; }
-  .btn-view { background: var(--blue); color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; font-weight: bold; }
+  .btn-view { background: var(--blue); color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -57,8 +56,8 @@
 <div id="loginOverlay">
     <div class="login-box">
         <h2 id="loginTitle">KSV Dashboard</h2>
-        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Datenabgleich...</p>
-        <input type="password" id="passInput" placeholder="Passwort...">
+        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Lade Daten...</p>
+        <input type="password" id="passInput" placeholder="Passwort..." autocomplete="off" autocapitalize="off">
         <button class="btn-action" onclick="handleAuth()">LOGIN</button>
     </div>
 </div>
@@ -67,7 +66,7 @@
   <div class="header">
     <div>
         <h2 id="viewTitle">KSV LIVE MANAGER</h2>
-        <div id="statusInfo" style="font-size: 0.7rem; color: var(--win);">● Echtzeit-Modus aktiv</div>
+        <div id="statusInfo" style="font-size: 0.7rem; color: var(--win);">● Online</div>
     </div>
     <button class="btn-action" style="width:auto; background:var(--red)" onclick="logout()">LOGOUT</button>
   </div>
@@ -90,45 +89,33 @@
     <div style="display:flex; gap:10px; flex-wrap: wrap; margin-bottom:15px;">
         <select id="companionSelect" style="flex:1; margin:0;"></select>
         <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
-        <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET</button>
+        <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET ALL</button>
     </div>
   </div>
 
-  <div class="ticker-card">
+  <div class="ticker-card" id="tickerBox">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div id="tickerLabel" style="color:var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Zeit seit dem letzten Stadionbesuch</div>
+    <div id="tickerLabel" style="color:var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Stadionabstinenz</div>
   </div>
 
   <div class="stats-bar">
     <div class="stat-mini"><span>Besuche</span><b id="statCount">-</b></div>
+    <div class="stat-mini"><span>Status</span><b id="statStatus">Aktiv</b></div>
     <div class="stat-mini"><span>Anfragen</span><b id="statReqs" style="color:var(--amber)">0</b></div>
     <div class="stat-mini"><span>Zukünftig</span><b id="statTotal">-</b></div>
-    <div class="stat-mini"><span>Letzter Sync</span><b id="statSync" style="font-size:0.8rem">Jetzt</b></div>
   </div>
 
   <div class="table-container">
-    <h3 style="margin-top:0;">📅 SPIELPLAN</h3>
+    <h3 style="margin-top:0;">📅 SPIELPLAN & ZUSAGEN</h3>
     <table class="match-table" id="matchTable">
-      <thead><tr><th>Datum</th><th>Ort</th><th>Gegner</th><th>Score</th><th>Begleiter / Status</th></tr></thead>
+      <thead><tr><th>Datum</th><th>Ort</th><th>Gegner</th><th>Score</th><th>Status</th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
   
   <div id="adminSections" style="display:none; margin-top:20px; display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-    <div class="table-container">
-        <h3>👤 RANKING</h3>
-        <table id="companionTable" style="width:100%; border-collapse:collapse; font-size: 0.85rem;">
-            <thead><tr style="color:var(--text-dim); text-align:left;"><th>NAME</th><th style="text-align:center">SPIELE</th></tr></thead>
-            <tbody></tbody>
-        </table>
-    </div>
-    <div class="table-container">
-        <h3>🔑 USER-STATUS & LIVE MONITOR</h3>
-        <table id="userTable" style="width:100%; border-collapse:collapse; font-size: 0.8rem;">
-            <thead><tr style="color:var(--text-dim); text-align:left;"><th>NAME</th><th>AKTIVITÄT</th><th>AKTION</th></tr></thead>
-            <tbody></tbody>
-        </table>
-    </div>
+    <div class="table-container"><h3>👤 RANKING</h3><table id="companionTable" style="width:100%; border-collapse:collapse; font-size: 0.85rem;"><tbody></tbody></table></div>
+    <div class="table-container"><h3>🔑 USER STATUS</h3><table id="userTable" style="width:100%; border-collapse:collapse; font-size: 0.8rem;"><tbody></tbody></table></div>
   </div>
 </div>
 
@@ -150,18 +137,13 @@ window.onload = async () => {
         document.getElementById("loginTitle").innerText = "Moin, " + filters.companion;
         if(params.get('mode') === 'view') { showApp(false); }
     }
-    // Auto-Refresh für Admin (alle 30 Sek)
+    // Auto-Ping für Status-Tracking
     setInterval(async () => {
-        if(isAdminMode) {
-            await refreshData();
-            render();
-            renderMessages();
-            document.getElementById("statSync").innerText = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
-        } else if(filters.companion) {
+        if(filters.companion && document.getElementById("mainApp").style.display === "block") {
             CloudDB.lastSeen[filters.companion] = Date.now();
             await saveToCloud();
         }
-    }, 30000);
+    }, 60000);
 };
 
 async function hash(str) {
@@ -171,7 +153,7 @@ async function hash(str) {
 }
 
 async function handleAuth() {
-    const pw = document.getElementById("passInput").value;
+    const pw = document.getElementById("passInput").value.trim(); // Leerzeichen entfernen
     if(!pw) return alert("Eingabe fehlt!");
     const pwHash = await hash(pw);
     const targetAdminHash = CloudDB.adminHash || FALLBACK_ADMIN_HASH;
@@ -179,48 +161,32 @@ async function handleAuth() {
     const params = new URLSearchParams(window.location.search);
     const isViewMode = params.get('mode') === 'view';
 
-    // 1. ADMIN-LOGIN (Nur Hauptseite ohne ID)
+    // 1. ADMIN LOGIN
     if(!filters.companion && pwHash === targetAdminHash) { 
         if(!CloudDB.adminHash) { CloudDB.adminHash = pwHash; await saveToCloud(); }
-        showApp(true); 
-        return; 
+        showApp(true); return; 
     }
 
-    // 2. BEGLEITER-LOGIN / REGISTRIERUNG
+    // 2. BEGLEITER LOGIN
     if(filters.companion) {
-        // VIEW-MODUS für dich als Admin
-        if(isViewMode && pwHash === targetAdminHash) {
-             showApp(false); 
-             return;
-        }
+        if(isViewMode && pwHash === targetAdminHash) { showApp(false); return; }
 
-        // FALL A: User hat noch KEIN Passwort (Ersteinrichtung)
-        if(!CloudDB.users || !CloudDB.users[filters.companion]) {
-            // Sicherheit: Darf nicht das Admin-Passwort wählen
-            if(pwHash === targetAdminHash) {
-                alert("Dieses Passwort ist reserviert. Bitte wähle ein eigenes!");
-                return;
-            }
-            // Passwort wird jetzt zum ersten Mal gesetzt
+        if(!CloudDB.users[filters.companion]) {
+            if(pwHash === targetAdminHash) return alert("Passwort reserviert. Wähle ein eigenes!");
             CloudDB.users[filters.companion] = pwHash;
             CloudDB.lastSeen[filters.companion] = Date.now();
             await saveToCloud();
-            alert("Passwort erfolgreich für " + filters.companion + " gespeichert!");
+            alert("Passwort für " + filters.companion + " gespeichert!");
             showApp(false);
-            return;
-        }
-
-        // FALL B: User HAT bereits ein Passwort (Normaler Login)
-        if(CloudDB.users[filters.companion] === pwHash) {
+        } else if(CloudDB.users[filters.companion] === pwHash) {
             CloudDB.lastSeen[filters.companion] = Date.now();
             await saveToCloud();
             showApp(false);
         } else {
-            alert("Falsches Passwort für diesen Account!");
+            alert("Passwort falsch!");
         }
     } else {
-        // Dieser Fall tritt ein, wenn jemand ohne ID und mit falschem Passwort versucht zu loggen
-        alert("Zugriff verweigert. Bitte nutze deinen persönlichen Link!");
+        alert("Zugriff verweigert. Nutze deinen persönlichen Link!");
     }
 }
 
@@ -310,22 +276,22 @@ function render() {
     if(isAdminMode) {
         const sortedComps = Object.entries(comps).sort((a,b) => b[1] - a[1]);
         document.getElementById("companionTable").querySelector("tbody").innerHTML = sortedComps.map(([n, s]) => `<tr><td>${n}</td><td style="text-align:center">${s}x</td></tr>`).join("");
+        
         const allNames = Object.keys(comps).sort();
         document.getElementById("companionSelect").innerHTML = allNames.map(n => `<option value="${n}">${n}</option>`).join("");
         document.getElementById("userTable").querySelector("tbody").innerHTML = allNames.map(u => {
             const id = Object.keys(CloudDB.userIds).find(k => CloudDB.userIds[k] === u);
             const lastTime = CloudDB.lastSeen[u];
-            let status = '<span class="status-badge no-pw">Noch kein Passwort vergeben</span>';
+            let status = '<span class="status-badge no-pw">Noch kein Passwort</span>';
+
             if(CloudDB.users[u] && lastTime) {
                 const diff = (now - lastTime) / 1000;
-                if(diff < 90) { status = '<span class="status-badge online">ONLINE</span>'; }
-                else { 
-                    const d = new Date(lastTime);
-                    status = `<span style="font-size:0.75rem; color:var(--text-dim)">Zuletzt online am ${d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})}. um ${d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})} Uhr</span>`;
-                }
+                if(diff < 120) status = '<span class="status-badge online">ONLINE</span>';
+                else status = `<span style="font-size:0.7rem; color:var(--text-dim)">Zuletzt: ${new Date(lastTime).toLocaleString('de-DE', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'})}</span>`;
             }
+
             const viewBtn = id ? `<button class="btn-view" onclick="switchToUser('${id}')">VIEW</button>` : '';
-            return `<tr><td><b>${u}</b></td><td>${status}</td><td>${viewBtn}<button onclick="resetUser('${u}')" style="background:var(--red); border:none; color:white; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td></tr>`;
+            return `<tr><td><b>${u}</b></td><td>${status}</td><td>${viewBtn}<button onclick="resetUser('${u}')" style="background:var(--red); color:white; border:none; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td></tr>`;
         }).join("");
     }
 
@@ -334,7 +300,9 @@ function render() {
         const isFuture = !m.played && m.fD > now;
         const manual = CloudDB.confirmedManual[m.datum] || [];
         const confirmed = [...new Set([...m.begleiter.split(/,| und /).map(n => n.trim()), ...manual])].filter(n => n && n !== "nicht im stadion");
+        
         if(filters.companion && !isFuture && !confirmed.includes(filters.companion)) return "";
+        
         let statusHtml = "";
         if(isFuture) {
             const requests = CloudDB.zusagen.filter(z => z.date === m.datum).map(z => z.user);
@@ -347,11 +315,12 @@ function render() {
                 else statusHtml = `<button class="btn-action" style="padding:5px 15px; font-size:0.7rem;" onclick="submitZusage('${m.datum}')">DABEI!</button>`;
             }
         } else { statusHtml = confirmed.map(n => `<span class="tag-confirmed">${n}</span>`).join(""); }
+        
         return `<tr><td>${m.datum}</td><td>${m.ort}</td><td>${m.gegner}</td><td>${m.played?m.tK+':'+m.tG:'-:-'}</td><td>${statusHtml}</td></tr>`;
     }).join("");
 
-    const userHistory = data.filter(m => m.played && confirmedCheck(m, filters.companion));
-    const lastMatch = isAdminMode ? data.filter(m => m.played)[0] : userHistory[0];
+    const userHist = data.filter(m => m.played && confirmedCheck(m, filters.companion));
+    const lastMatch = isAdminMode ? data.filter(m => m.played)[0] : userHist[0];
     if(lastMatch) {
         const last = lastMatch.fD;
         const tick = () => {
@@ -361,7 +330,7 @@ function render() {
         };
         tick(); setInterval(tick, 1000);
     }
-    document.getElementById("statCount").innerText = isAdminMode ? data.filter(m => m.played).length : userHistory.length;
+    document.getElementById("statCount").innerText = isAdminMode ? data.filter(m => m.played).length : userHist.length;
     document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
     document.getElementById("statReqs").innerText = CloudDB.zusagen.length;
 }
