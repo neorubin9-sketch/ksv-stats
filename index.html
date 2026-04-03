@@ -20,7 +20,6 @@
   input[type="password"], input[type="text"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; text-align: center; }
   .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
   
-  /* Header */
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
   
   /* Messenger / Postfach */
@@ -30,7 +29,6 @@
   .msg-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 400px; padding-right: 10px; }
   .chat-tab { padding: 12px; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.03); font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; }
   .chat-tab.active { background: var(--blue); border-color: #60a5fa; }
-  .unread-dot { width: 10px; height: 10px; background: var(--red); border-radius: 50%; box-shadow: 0 0 5px var(--red); }
   .msg-content { display: flex; flex-direction: column; background: rgba(15, 23, 42, 0.5); border-radius: 15px; padding: 15px; border: 1px solid var(--border); }
   .msg-list { flex: 1; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
   .msg-bubble { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 0.85rem; }
@@ -46,11 +44,13 @@
   .tag-request { background: var(--amber); color: #000; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; margin: 2px; display: inline-flex; align-items: center; gap: 5px; }
   .btn-check { background: #fff; border: none; border-radius: 4px; cursor: pointer; padding: 0 4px; font-weight: 900; color: var(--win); }
 
-  /* Stats Bar */
+  /* Stats & Ticker */
+  .ticker-card { background: var(--card); padding: 25px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center; }
+  .ticker-val { font-size: 2.8rem; font-weight: 900; color: #fff; margin-bottom: 5px; }
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
   .stat-mini { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
-  .stat-mini b { display: block; font-size: 1.2rem; color: #fff; margin-top: 5px; }
-  .ticker-val { font-size: 2.2rem; font-weight: 900; color: #fff; text-align: center; margin-bottom: 5px; }
+  .stat-mini span { font-size: 0.75rem; color: var(--text-dim); display: block; }
+  .stat-mini b { display: block; font-size: 1.3rem; color: #fff; margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -68,13 +68,13 @@
   <div class="header">
     <div>
         <h2 id="viewTitle">KSV LIVE MANAGER</h2>
-        <div id="statusInfo" style="font-size: 0.7rem; color: var(--win);">● Online</div>
+        <div id="statusInfo" style="font-size: 0.7rem; color: var(--win);">● Verbindung aktiv</div>
     </div>
     <button class="btn-action" style="width:auto; background:var(--red)" onclick="logout()">LOGOUT</button>
   </div>
 
   <div class="msg-center">
-      <h3 style="margin:0 0 15px 0; font-size: 1rem; color: #60a5fa;">💬 POSTFACH</h3>
+      <h3 style="margin:0 0 15px 0; font-size: 1rem; color: #60a5fa;">💬 NACHRICHTEN</h3>
       <div class="msg-layout">
           <div class="msg-sidebar" id="chatSidebar"></div>
           <div class="msg-content">
@@ -87,25 +87,25 @@
       </div>
   </div>
 
-  <div class="admin-panel" id="adminTools" style="display:none;">
-    <h3 style="margin-top:0; color:#60a5fa; font-size:0.9rem">ADMIN BEREICH</h3>
-    <div style="display:flex; gap:10px; flex-wrap: wrap; margin-bottom:20px;">
+  <div class="admin-panel" id="adminTools" style="display:none; border: 1px solid var(--blue); padding: 20px; border-radius: 20px; margin-bottom: 20px;">
+    <h3 style="margin-top:0; color:#60a5fa; font-size: 0.9rem;">ADMIN STEUERUNG</h3>
+    <div style="display:flex; gap:10px; flex-wrap: wrap;">
         <select id="companionSelect" style="flex:1; margin:0;"></select>
         <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
         <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET</button>
     </div>
   </div>
 
-  <div class="ticker-card" style="background: var(--card); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border);">
+  <div class="ticker-card" id="tickerBox">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase; text-align:center;">Abwesenheit vom Stadion</div>
+    <div id="tickerLabel" style="color:var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Zeit seit deinem letzten Stadionbesuch</div>
   </div>
 
   <div class="stats-bar">
-    <div class="stat-mini"><span>Besuche</span><b id="statCount">-</b></div>
+    <div class="stat-mini"><span>Deine Besuche</span><b id="statCount">-</b></div>
     <div class="stat-mini"><span>Status</span><b id="statStatus">Aktiv</b></div>
     <div class="stat-mini"><span>Anfragen</span><b id="statReqs" style="color:var(--amber)">0</b></div>
-    <div class="stat-mini"><span>Zukünftig</span><b id="statTotal">-</b></div>
+    <div class="stat-mini"><span>Zukünftige Spiele</span><b id="statTotal">-</b></div>
   </div>
 
   <div class="table-container">
@@ -124,8 +124,8 @@
             <tbody></tbody>
         </table>
     </div>
-    <div class="table-container" style="border: 1px solid var(--blue);">
-        <h3 style="color:#60a5fa">🔑 USER-STATUS</h3>
+    <div class="table-container">
+        <h3>🔑 USER-STATUS</h3>
         <table id="userTable" style="width:100%; border-collapse:collapse; font-size: 0.85rem;">
             <thead><tr style="color:var(--text-dim); text-align:left;"><th>NAME</th><th style="text-align:center">STATUS</th><th>AKTION</th></tr></thead>
             <tbody></tbody>
@@ -146,7 +146,6 @@ window.onload = async () => {
     await refreshData();
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
-
     if(id && CloudDB.userIds[id]) {
         filters.companion = CloudDB.userIds[id];
         activeChat = "Admin";
@@ -162,7 +161,7 @@ async function hash(str) {
 
 async function handleAuth() {
     const pw = document.getElementById("passInput").value;
-    if(!pw) return alert("Eingabe fehlt!");
+    if(!pw) return alert("Passwort fehlt!");
     const pwHash = await hash(pw);
     const targetAdminHash = CloudDB.adminHash || FALLBACK_ADMIN_HASH;
 
@@ -183,6 +182,7 @@ async function showApp(isAdmin) {
     if(isAdmin) {
         document.getElementById("adminTools").style.display = "block";
         document.getElementById("adminSections").style.display = "grid";
+        document.getElementById("tickerLabel").innerText = "Zeit seit dem letzten Stadionbesuch (Global)";
     }
     render();
     renderMessages();
@@ -257,26 +257,23 @@ function render() {
     const now = new Date();
     data.sort((a,b) => b.fD - a.fD);
     
-    // Begleiter Stats & Ranking
+    // Globales Ranking berechnen
     const comps = {};
     data.forEach(m => {
         const manual = CloudDB.confirmedManual[m.datum] || [];
         const combined = [...new Set([...m.begleiter.split(/,| und /).map(n => n.trim()), ...manual])].filter(n => n && n !== "nicht im stadion");
-        if(m.played) {
-            combined.forEach(n => { if(!comps[n]) comps[n] = 0; comps[n]++; });
-        }
+        if(m.played) combined.forEach(n => { if(!comps[n]) comps[n] = 0; comps[n]++; });
     });
 
     if(isAdminMode) {
         const sortedComps = Object.entries(comps).sort((a,b) => b[1] - a[1]);
         document.getElementById("companionTable").querySelector("tbody").innerHTML = sortedComps.map(([n, s]) => `<tr><td>${n}</td><td style="text-align:center">${s}x</td></tr>`).join("");
-        
-        const allComps = Object.keys(comps).sort();
-        document.getElementById("companionSelect").innerHTML = allComps.map(n => `<option value="${n}">${n}</option>`).join("");
-        document.getElementById("userTable").querySelector("tbody").innerHTML = allComps.map(u => `<tr><td>${u}</td><td style="text-align:center">${CloudDB.users[u] ? '✅ Aktiv' : '⏳ Wartend'}</td><td><button onclick="resetUser('${u}')" style="background:var(--red); color:white; border:none; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td></tr>`).join("");
+        const allNames = Object.keys(comps).sort();
+        document.getElementById("companionSelect").innerHTML = allNames.map(n => `<option value="${n}">${n}</option>`).join("");
+        document.getElementById("userTable").querySelector("tbody").innerHTML = allNames.map(u => `<tr><td>${u}</td><td style="text-align:center">${CloudDB.users[u] ? '✅ Aktiv' : '⏳ Wartend'}</td><td><button onclick="resetUser('${u}')" style="background:var(--red); color:white; border:none; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td></tr>`).join("");
     }
 
-    // Spielplan Tabelle
+    // Spielplan & Filter
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
         const isFuture = !m.played && m.fD > now;
@@ -301,8 +298,21 @@ function render() {
         return `<tr><td>${m.datum}</td><td>${m.ort}</td><td>${m.gegner}</td><td>${m.played?m.tK+':'+m.tG:'-:-'}</td><td>${statusHtml}</td></tr>`;
     }).join("");
 
-    const histCount = data.filter(m => m.played && (m.begleiter.includes(filters.companion) || (CloudDB.confirmedManual[m.datum] && CloudDB.confirmedManual[m.datum].includes(filters.companion)))).length;
-    document.getElementById("statCount").innerText = filters.companion ? histCount : data.filter(m => m.played).length;
+    // TICKER & STATS
+    const userHistory = data.filter(m => m.played && (m.begleiter.split(/,| und /).includes(filters.companion) || (CloudDB.confirmedManual[m.datum] && CloudDB.confirmedManual[m.datum].includes(filters.companion))));
+    const lastMatch = isAdminMode ? data.filter(m => m.played)[0] : userHistory[0];
+    
+    if(lastMatch) {
+        const last = lastMatch.fD;
+        const tick = () => {
+            const diff = Math.max(0, new Date() - last);
+            const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+            document.getElementById("liveTicker").innerText = `${d}t ${h}h ${m}m ${s}s`;
+        };
+        tick(); setInterval(tick, 1000);
+    }
+
+    document.getElementById("statCount").innerText = isAdminMode ? data.filter(m => m.played).length : userHistory.length;
     document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
     document.getElementById("statReqs").innerText = CloudDB.zusagen.length;
 }
@@ -323,7 +333,7 @@ async function copyLink() {
     let id = Object.keys(CloudDB.userIds).find(key => CloudDB.userIds[key] === name) || Math.random().toString(36).substr(2, 6);
     CloudDB.userIds[id] = name; await saveToCloud();
     navigator.clipboard.writeText(window.location.origin + window.location.pathname + "?id=" + id);
-    alert("Link kopiert!");
+    alert("Link für " + name + " kopiert!");
 }
 async function clearCloud() { if(confirm("RESET?")) { CloudDB={zusagen:[],msgs:[],users:{},adminHash:null,userIds:{},confirmedManual:{}}; await saveToCloud(); location.reload(); } }
 </script>
