@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>KSV – Live Manager Admin</title>
+<title>KSV – Live Manager</title>
 <style>
   :root{ 
     --blue:#003f8c; --red:#e30613; --bg:#0f172a; --card:#1e293b; 
@@ -13,13 +13,6 @@
   *{box-sizing:border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent;}
   body{ margin:0; padding:10px; background: var(--bg); color:var(--text); line-height: 1.5; }
   .container { max-width: 1650px; margin: 0 auto; display: none; } 
-
-  @media (max-width: 600px) {
-    .header { padding: 15px !important; flex-direction: column; gap: 15px; }
-    .ticker-val { font-size: 1.6rem !important; }
-    .match-table { font-size: 0.7rem; }
-    .name-tag { font-size: 0.6rem !important; }
-  }
 
   #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
   .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 350px; }
@@ -52,27 +45,28 @@
   .tag-confirmed { background: var(--win); color: #000; }
   .tag-request { background: var(--amber); color: #000; font-style: italic; }
   
-  .st-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+  .st-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
   .st-on { background: var(--win); }
   .st-off { background: var(--red); }
-  .btn-zusage { background: var(--win); color: #000; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 900; font-size: 0.65rem; cursor: pointer; }
-  .future-row { opacity: 0.8; }
+  .btn-zusage { background: var(--win); color: #000; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 900; font-size: 0.65rem; cursor: pointer; width: 100%; }
+  .future-row { background: rgba(255,255,255,0.02); }
 </style>
 </head>
 <body>
 
 <div id="loginOverlay">
     <div class="login-box">
-        <h2 style="margin-bottom:20px;">KSV Dashboard Login</h2>
-        <input type="password" id="passInput" placeholder="Passwort...">
-        <button class="btn-action" onclick="checkLogin()">LOGIN</button>
+        <h2 style="margin-bottom:20px;">KSV Dashboard</h2>
+        <input type="password" id="passInput" placeholder="Admin Passwort...">
+        <button class="btn-action" onclick="checkLogin()">ADMIN LOGIN</button>
+        <p style="color:var(--text-dim); font-size: 0.7rem; margin-top: 20px;">Begleiter nutzen bitte ihren persönlichen Link.</p>
     </div>
 </div>
 
 <div class="container" id="mainApp">
   <div class="header">
     <div>
-        <h2 style="margin:0; font-size: 1.4rem;">KSV LIVE MANAGER</h2>
+        <h2 id="viewTitle" style="margin:0; font-size: 1.4rem;">KSV LIVE MANAGER</h2>
         <div id="statusInfo" style="color:var(--text-dim); font-size: 0.75rem;">Lade Daten...</div>
     </div>
     <button class="btn-action" style="width:auto; background:var(--red)" onclick="logout()">LOGOUT</button>
@@ -80,36 +74,34 @@
 
   <div class="admin-panel" id="adminTools">
     <div style="display:flex; gap:10px; flex-wrap: wrap;">
-        <select id="companionSelect" style="margin:0; flex:1; min-width: 200px;">
-            <option value="">Lade Begleiter...</option>
-        </select>
-        <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK</button>
+        <select id="companionSelect" style="margin:0; flex:1; min-width: 200px;"></select>
+        <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
         <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET CLOUD</button>
     </div>
   </div>
 
   <div class="ticker-card">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Abwesenheit vom Stadion</div>
+    <div id="tickerLabel" style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Abwesenheit vom Stadion</div>
   </div>
 
   <div class="stats-bar">
-    <div class="stat-mini"><span>Ø Frequenz</span><b id="statFreq">-</b></div>
-    <div class="stat-mini"><span>Ø Pause</span><b id="statGap">-</b></div>
-    <div class="stat-mini"><span>Max Lücke</span><b id="statMax">-</b></div>
-    <div class="stat-mini"><span>Spiele</span><b id="statCount">-</b></div>
+    <div class="stat-mini"><span>Spiele gesamt</span><b id="statCount">-</b></div>
+    <div class="stat-mini"><span>Zuletzt vor</span><b id="statLast">-</b></div>
+    <div class="stat-mini"><span>Status</span><b id="statStatus">Aktiv</b></div>
+    <div class="stat-mini"><span>Saison</span><b>23/24</b></div>
   </div>
 
   <div class="main-grid">
     <div class="table-container">
-      <h3>📅 SPIELPLAN & BEGLEITER</h3>
+      <h3 id="tableTitle">📅 SPIELPLAN</h3>
       <table class="match-table" id="matchTable">
-        <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Dabei / Anfragen</th></tr></thead>
+        <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Status / Aktion</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
     <div class="table-container" id="companionSection">
-        <h3>👤 BEGLEITER-STATS</h3>
+        <h3>👤 BEGLEITER-STATS (Global)</h3>
         <table id="companionTable" style="width:100%; border-collapse:collapse;">
           <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>NAME</th><th>SPIELE</th><th>LÜCKE</th></tr></thead>
           <tbody></tbody>
@@ -130,6 +122,7 @@ window.onload = async () => {
     const user = params.get('user');
     if(user) { 
         filters.companion = decodeURIComponent(user); 
+        document.getElementById("viewTitle").innerText = "Hallo, " + filters.companion + "!";
         showApp(false); 
     }
 };
@@ -174,8 +167,7 @@ async function refreshData() {
         render();
         document.getElementById("statusInfo").innerText = "Daten synchronisiert";
     } catch (e) { 
-        console.error(e);
-        document.getElementById("statusInfo").innerText = "Ladefehler!"; 
+        document.getElementById("statusInfo").innerText = "Fehler beim Laden!"; 
     }
 }
 
@@ -196,59 +188,67 @@ function render() {
     data.sort((a,b) => b.fD - a.fD);
     
     const playedPast = data.filter(d => d.played && d.fD <= now);
-    const relevant = filters.companion ? 
-        playedPast.filter(m => m.begleiter.includes(filters.companion)) : 
-        playedPast.filter(m => m.begleiter !== "" && m.begleiter.toLowerCase() !== "nicht im stadion");
-
-    // Ticker Logik
-    if (relevant.length > 0) {
-        relevant.sort((a,b) => a.fD - b.fD);
-        const lastVisit = relevant[relevant.length-1].fD;
+    
+    // Ticker Berechnung (Letztes Spiel des aktuellen Users)
+    const userHistory = playedPast.filter(m => m.begleiter.includes(filters.companion || "---"));
+    if (userHistory.length > 0) {
+        userHistory.sort((a,b) => a.fD - b.fD);
+        const lastVisit = userHistory[userHistory.length-1].fD;
         if(tickerInterval) clearInterval(tickerInterval);
         tickerInterval = setInterval(() => {
             const diff = Math.max(0, new Date() - lastVisit);
             const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
             document.getElementById("liveTicker").innerText = `${d}t ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
         }, 1000);
+        document.getElementById("statLast").innerText = Math.floor((now - lastVisit)/86400000) + " Tage";
     }
 
-    // Match Tabelle
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
         const isFuture = m.fD > now;
         const confirmedList = m.begleiter ? m.begleiter.split(/,| und /).map(n => n.trim()) : [];
-        const isConfirmed = confirmedList.includes(filters.companion || "");
+        const isUserConfirmed = confirmedList.includes(filters.companion || "");
         const requests = ZusagenCloud.filter(z => z.date === m.datum).map(z => z.user);
         const hasRequested = requests.includes(filters.companion);
 
-        if(filters.companion && !isConfirmed && !isFuture) return "";
+        // FILTER LOGIK: 
+        // 1. Vergangene Spiele: Nur anzeigen, wenn der User dabei war (oder Admin-Ansicht)
+        // 2. Zukünftige Spiele: IMMER anzeigen
+        if(filters.companion && !isFuture && !isUserConfirmed) return "";
 
-        let nameDisplayHtml = "";
+        let actionHtml = "";
         if(filters.companion) {
             if(isFuture) {
-                nameDisplayHtml = isConfirmed ? '<span class="name-tag tag-confirmed">BESTÄTIGT</span>' : (hasRequested ? '<span class="name-tag tag-request">ANGEFRAGT...</span>' : `<button class="btn-zusage" onclick="submitZusage('${m.datum}')">DABEI!</button>`);
+                if(isUserConfirmed) {
+                    actionHtml = '<span class="name-tag tag-confirmed">BESTÄTIGT ✅</span>';
+                } else if(hasRequested) {
+                    actionHtml = '<span class="name-tag tag-request">ANGEFRAGT...</span>';
+                } else {
+                    actionHtml = `<button class="btn-zusage" onclick="submitZusage('${m.datum}')">DABEI!</button>`;
+                }
             } else {
-                nameDisplayHtml = isConfirmed ? '<span class="st-dot st-on"></span>' : '<span class="st-dot st-off"></span>';
+                actionHtml = isUserConfirmed ? '<span class="st-dot st-on"></span> Dabeigewesen' : '';
             }
         } else {
+            // Admin Ansicht
             let tags = confirmedList.map(n => n ? `<span class="name-tag tag-confirmed">${n}</span>` : "").join("");
             let reqs = requests.filter(n => !confirmedList.includes(n)).map(n => `<span class="name-tag tag-request">? ${n}</span>`).join("");
-            nameDisplayHtml = `<div class="name-container">${tags}${reqs}</div>`;
+            actionHtml = `<div class="name-container">${tags}${reqs}</div>`;
         }
 
         return `<tr class="${isFuture ? 'future-row' : ''}">
-            <td style="font-size:0.7rem">${m.datum}</td><td><span style="font-size:8px; padding:2px 4px; background:#334155; border-radius:3px;">${m.ort}</span></td>
-            <td style="text-align:right"><b>${m.ort=='H'?m.meinVerein:m.gegner}</b> <img src="${m.ort=='H'?m.meinVerein:m.gegner}.png" class="logo-img" onerror="this.style.display='none'"></td>
-            <td><div class="score-box">${m.played && !isFuture ? (m.ort=='H'?m.tK+':'+m.tG:m.tG+':'+m.tK) : '-:-'}</div></td>
-            <td style="text-align:left"><img src="${m.ort=='A'?m.meinVerein:m.gegner}.png" class="logo-img" onerror="this.style.display='none'"> <b>${m.ort=='A'?m.meinVerein:m.gegner}</b></td>
-            <td>${nameDisplayHtml}</td>
+            <td style="font-size:0.7rem">${m.datum}</td>
+            <td><span style="font-size:8px; padding:2px 4px; background:#334155; border-radius:3px;">${m.ort}</span></td>
+            <td style="text-align:right"><b>${m.ort=='H'?m.meinVerein:m.gegner}</b></td>
+            <td><div class="score-box">${m.played ? (m.ort=='H'?m.tK+':'+m.tG:m.tG+':'+m.tK) : '-:-'}</div></td>
+            <td style="text-align:left"><b>${m.ort=='A'?m.meinVerein:m.gegner}</b></td>
+            <td>${actionHtml}</td>
         </tr>`;
     }).join("");
 
-    // Begleiter Stats & Dropdown füllen
+    // Statistiken & Dropdown (nur Admin)
     if(!filters.companion) {
         const comps = {};
-        // Wir nehmen ALLE Daten, um das Dropdown zu füllen
         data.forEach(m => {
             if(m.begleiter) {
                 m.begleiter.split(/,| und /).forEach(n => {
@@ -262,37 +262,36 @@ function render() {
             }
         });
 
-        // Dropdown füllen
-        const sortedNames = Object.keys(comps).sort();
-        document.getElementById("companionSelect").innerHTML = '<option value="">Wähle Name...</option>' + 
-            sortedNames.map(n => `<option value="${n}">${n}</option>`).join("");
+        document.getElementById("companionSelect").innerHTML = '<option value="">Name wählen...</option>' + 
+            Object.keys(comps).sort().map(n => `<option value="${n}">${n}</option>`).join("");
 
-        // Stats Tabelle füllen
         document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps)
-            .filter(([n, s]) => s.sp > 0)
             .sort((a,b)=>b[1].sp - a[1].sp)
             .map(([n, s]) => `
-            <tr onclick="window.location.href='?user=${encodeURIComponent(n)}'" style="cursor:pointer;">
-                <td style="padding:10px; font-weight:bold; text-align:left;">${n}</td>
-                <td>${s.sp}x</td>
-                <td style="color:var(--red)">${s.last ? Math.floor((now-s.last)/86400000) + ' T.' : '-'}</td>
-            </tr>`).join("");
-            
-        // Stats Counter
+            <tr><td style="padding:10px; text-align:left;"><b>${n}</b></td><td>${s.sp}x</td><td style="color:var(--red)">${s.last ? Math.floor((now-s.last)/86400000)+'T.' : '-'}</td></tr>`).join("");
+        
         document.getElementById("statCount").innerText = playedPast.length;
+    } else {
+        document.getElementById("statCount").innerText = userHistory.length;
     }
 }
 
 async function submitZusage(datum) {
     if(!filters.companion) return;
+    if(!confirm("Möchtest du dich für das Spiel am " + datum + " anmelden?")) return;
+    
     ZusagenCloud.push({ user: filters.companion, date: datum });
-    await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ zusagen: ZusagenCloud }) });
-    alert("Anfrage an Neo gesendet!"); 
+    await fetch(DB_URL, { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify({ zusagen: ZusagenCloud }) 
+    });
+    alert("Anfrage gesendet!"); 
     refreshData();
 }
 
 async function clearCloud() {
-    if(confirm("Alle Zusagen löschen?")) {
+    if(confirm("Alle offenen Anfragen löschen?")) {
         await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ zusagen: [] }) });
         refreshData();
     }
