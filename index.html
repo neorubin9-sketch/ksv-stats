@@ -87,8 +87,9 @@
       </div>
   </div>
 
-  <div class="admin-panel" id="adminTools" style="display:none; border: 1px solid var(--blue); padding: 20px; border-radius: 20px; margin-bottom: 20px;">
-    <div style="display:flex; gap:10px; flex-wrap: wrap;">
+  <div class="admin-panel" id="adminTools" style="display:none;">
+    <h3 style="margin-top:0; color:#60a5fa; font-size:0.9rem">ADMIN BEREICH</h3>
+    <div style="display:flex; gap:10px; flex-wrap: wrap; margin-bottom:20px;">
         <select id="companionSelect" style="flex:1; margin:0;"></select>
         <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
         <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET</button>
@@ -116,8 +117,20 @@
   </div>
   
   <div id="adminSections" style="display:none; margin-top:20px; display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-    <div class="table-container"><h3>👤 RANKING</h3><table id="companionTable" style="width:100%; font-size: 0.8rem;"><tbody></tbody></table></div>
-    <div class="table-container"><h3>🔑 USER-STATUS</h3><table id="userTable" style="width:100%; font-size: 0.8rem;"><tbody></tbody></table></div>
+    <div class="table-container">
+        <h3>👤 BEGLEITER-RANKING</h3>
+        <table id="companionTable" style="width:100%; border-collapse:collapse; font-size: 0.85rem;">
+            <thead><tr style="color:var(--text-dim); text-align:left;"><th>NAME</th><th style="text-align:center">SPIELE</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <div class="table-container" style="border: 1px solid var(--blue);">
+        <h3 style="color:#60a5fa">🔑 USER-STATUS</h3>
+        <table id="userTable" style="width:100%; border-collapse:collapse; font-size: 0.85rem;">
+            <thead><tr style="color:var(--text-dim); text-align:left;"><th>NAME</th><th style="text-align:center">STATUS</th><th>AKTION</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
   </div>
 </div>
 
@@ -181,6 +194,7 @@ async function refreshData() {
         const excelJson = await resExcel.json();
         CloudDB = await resCloud.json();
         if(!CloudDB.confirmedManual) CloudDB.confirmedManual = {};
+        if(!CloudDB.msgs) CloudDB.msgs = [];
         if(!CloudDB.zusagen) CloudDB.zusagen = [];
         data = excelJson.map(r => ({
             fD: parseFixDate(r["Datum"] || r["datum"], r["Uhrzeit"] || r["uhrzeit"]),
@@ -199,7 +213,6 @@ function parseFixDate(d, t) {
     return dO;
 }
 
-// --- MESSENGER & TABS ---
 function renderMessages() {
     const sidebar = document.getElementById("chatSidebar");
     const list = document.getElementById("msgList");
@@ -223,12 +236,11 @@ function renderMessages() {
 
 async function sendMessage() {
     const input = document.getElementById("msgInput"); if(!input.value) return;
-    const time = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+    const time = new Date().toLocaleDateString('de-DE') + " " + new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
     CloudDB.msgs.push({ from: isAdminMode ? `Admin < ${activeChat}` : `${filters.companion} < Admin`, to: isAdminMode ? activeChat : "Admin", txt: input.value, time: time });
     await saveToCloud(); input.value = ""; renderMessages();
 }
 
-// --- ZUSAGEN BESTÄTIGEN ---
 async function approve(date, user) {
     if(!CloudDB.confirmedManual[date]) CloudDB.confirmedManual[date] = [];
     CloudDB.confirmedManual[date].push(user);
@@ -241,42 +253,67 @@ async function submitZusage(date) {
     await saveToCloud(); render();
 }
 
-// --- RENDERING ---
 function render() {
     const now = new Date();
     data.sort((a,b) => b.fD - a.fD);
-    const tbody = document.getElementById("matchTable").querySelector("tbody");
     
+    // Begleiter Stats & Ranking
+    const comps = {};
+    data.forEach(m => {
+        const manual = CloudDB.confirmedManual[m.datum] || [];
+        const combined = [...new Set([...m.begleiter.split(/,| und /).map(n => n.trim()), ...manual])].filter(n => n && n !== "nicht im stadion");
+        if(m.played) {
+            combined.forEach(n => { if(!comps[n]) comps[n] = 0; comps[n]++; });
+        }
+    });
+
+    if(isAdminMode) {
+        const sortedComps = Object.entries(comps).sort((a,b) => b[1] - a[1]);
+        document.getElementById("companionTable").querySelector("tbody").innerHTML = sortedComps.map(([n, s]) => `<tr><td>${n}</td><td style="text-align:center">${s}x</td></tr>`).join("");
+        
+        const allComps = Object.keys(comps).sort();
+        document.getElementById("companionSelect").innerHTML = allComps.map(n => `<option value="${n}">${n}</option>`).join("");
+        document.getElementById("userTable").querySelector("tbody").innerHTML = allComps.map(u => `<tr><td>${u}</td><td style="text-align:center">${CloudDB.users[u] ? '✅ Aktiv' : '⏳ Wartend'}</td><td><button onclick="resetUser('${u}')" style="background:var(--red); color:white; border:none; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td></tr>`).join("");
+    }
+
+    // Spielplan Tabelle
+    const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
         const isFuture = !m.played && m.fD > now;
-        if(filters.companion && !isFuture && !m.begleiter.includes(filters.companion)) return "";
-        
-        let statusHtml = "";
         const manual = CloudDB.confirmedManual[m.datum] || [];
         const confirmed = [...new Set([...m.begleiter.split(/,| und /).map(n => n.trim()), ...manual])].filter(n => n && n !== "nicht im stadion");
         
+        if(filters.companion && !isFuture && !confirmed.includes(filters.companion)) return "";
+        
+        let statusHtml = "";
         if(isFuture) {
             const requests = CloudDB.zusagen.filter(z => z.date === m.datum).map(z => z.user);
             if(isAdminMode) {
                 statusHtml = confirmed.map(n => `<span class="tag-confirmed">${n}</span>`).join("") + 
                              requests.map(n => `<span class="tag-request">${n} <button class="btn-check" onclick="approve('${m.datum}','${n}')">✔</button></span>`).join("");
             } else {
-                const isConfirmed = confirmed.includes(filters.companion);
-                const isRequested = requests.includes(filters.companion);
-                if(isConfirmed) statusHtml = '<span class="tag-confirmed">BESTÄTIGT ✅</span>';
-                else if(isRequested) statusHtml = '<span class="tag-request">ANGEFRAGT... ⏳</span>';
+                if(confirmed.includes(filters.companion)) statusHtml = '<span class="tag-confirmed">BESTÄTIGT ✅</span>';
+                else if(requests.includes(filters.companion)) statusHtml = '<span class="tag-request">ANGEFRAGT... ⏳</span>';
                 else statusHtml = `<button class="btn-action" style="padding:5px 15px; font-size:0.7rem;" onclick="submitZusage('${m.datum}')">DABEI!</button>`;
             }
-        } else {
-            statusHtml = confirmed.map(n => `<span class="tag-confirmed">${n}</span>`).join("");
-        }
+        } else { statusHtml = confirmed.map(n => `<span class="tag-confirmed">${n}</span>`).join(""); }
         
         return `<tr><td>${m.datum}</td><td>${m.ort}</td><td>${m.gegner}</td><td>${m.played?m.tK+':'+m.tG:'-:-'}</td><td>${statusHtml}</td></tr>`;
     }).join("");
 
-    document.getElementById("statCount").innerText = data.filter(m => m.played && (m.begleiter.includes(filters.companion) || (CloudDB.confirmedManual[m.datum] && CloudDB.confirmedManual[m.datum].includes(filters.companion)))).length;
+    const histCount = data.filter(m => m.played && (m.begleiter.includes(filters.companion) || (CloudDB.confirmedManual[m.datum] && CloudDB.confirmedManual[m.datum].includes(filters.companion)))).length;
+    document.getElementById("statCount").innerText = filters.companion ? histCount : data.filter(m => m.played).length;
     document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
     document.getElementById("statReqs").innerText = CloudDB.zusagen.length;
+}
+
+async function resetUser(u) {
+    if(confirm(`User ${u} zurücksetzen?`)) {
+        delete CloudDB.users[u];
+        let id = Object.keys(CloudDB.userIds).find(k => CloudDB.userIds[k] === u);
+        if(id) delete CloudDB.userIds[id];
+        await saveToCloud(); render();
+    }
 }
 
 async function saveToCloud() { await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(CloudDB) }); }
@@ -288,7 +325,7 @@ async function copyLink() {
     navigator.clipboard.writeText(window.location.origin + window.location.pathname + "?id=" + id);
     alert("Link kopiert!");
 }
-async function clearCloud() { if(confirm("ALLES LÖSCHEN?")) { CloudDB={zusagen:[],msgs:[],users:{},adminHash:null,userIds:{},confirmedManual:{}}; await saveToCloud(); location.reload(); } }
+async function clearCloud() { if(confirm("RESET?")) { CloudDB={zusagen:[],msgs:[],users:{},adminHash:null,userIds:{},confirmedManual:{}}; await saveToCloud(); location.reload(); } }
 </script>
 </body>
 </html>
