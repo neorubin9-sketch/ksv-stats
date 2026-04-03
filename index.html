@@ -120,7 +120,6 @@
 </div>
 
 <script>
-// Master-Hash für "KSV" (Falls Cloud leer)
 const FALLBACK_ADMIN_HASH = "80f84501a359739070381373516422d369f688034d6f6e52003c200676450f3b"; 
 const NPOINT_ID = "15abfbbebe2742f743b2"; 
 const DB_URL = `https://api.npoint.io/${NPOINT_ID}`;
@@ -135,7 +134,7 @@ window.onload = async () => {
     if(id && CloudDB.userIds[id]) {
         filters.companion = CloudDB.userIds[id];
         document.getElementById("loginTitle").innerText = "Moin, " + filters.companion;
-        document.getElementById("loginDesc").innerText = CloudDB.users[filters.companion] ? "Bitte dein Passwort eingeben." : "Noch kein Passwort gesetzt. Lege jetzt eines fest:";
+        document.getElementById("loginDesc").innerText = CloudDB.users[filters.companion] ? "Bitte Passwort eingeben." : "Noch kein Passwort gesetzt. Lege jetzt eines fest:";
     } else {
         document.getElementById("loginTitle").innerText = "KSV Admin";
         document.getElementById("loginDesc").innerText = CloudDB.adminHash ? "Bitte Master-Passwort eingeben." : "System-Einrichtung: Lege jetzt dein Master-Passwort fest:";
@@ -153,14 +152,12 @@ async function handleAuth() {
     if(!pw) return alert("Eingabe fehlt!");
     const pwHash = await hash(pw);
 
-    // 1. Check: Admin?
     const targetAdminHash = CloudDB.adminHash || FALLBACK_ADMIN_HASH;
     if(pwHash === targetAdminHash) {
         showApp(true);
         return;
     }
 
-    // 2. Check: Begleiter?
     if(filters.companion) {
         if(!CloudDB.users[filters.companion]) {
             CloudDB.users[filters.companion] = pwHash;
@@ -191,6 +188,7 @@ async function showApp(isAdmin) {
         document.getElementById("viewTitle").innerText = "Moin, " + filters.companion;
     }
     render();
+    renderMessages();
 }
 
 async function refreshData() {
@@ -248,14 +246,8 @@ function render() {
         document.getElementById("companionSelect").innerHTML = sn.map(n => `<option value="${n}">${n}</option>`).join("");
         document.getElementById("msgTarget").innerHTML = '<option value="Alle">An Alle</option>' + sn.map(n => `<option value="${n}">${n}</option>`).join("");
         document.getElementById("userTable").querySelector("tbody").innerHTML = sn.map(u => {
-            // Finde ID für den User oder erstelle eine neue
             let existingId = Object.keys(CloudDB.userIds).find(key => CloudDB.userIds[key] === u);
-            return `
-            <tr>
-                <td style="text-align:left; padding:8px;"><b>${u}</b></td>
-                <td><span style="font-size:9px; color:var(--text-dim)">${existingId || 'Kein Link'}</span></td>
-                <td><button onclick="resetPW('${u}')" style="background:var(--red); color:white; border:none; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td>
-            </tr>`;
+            return `<tr><td style="text-align:left; padding:8px;"><b>${u}</b></td><td><span style="font-size:9px; color:var(--text-dim)">${existingId || 'Kein Link'}</span></td><td><button onclick="resetPW('${u}')" style="background:var(--red); color:white; border:none; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td></tr>`;
         }).join("");
     }
 
@@ -274,8 +266,7 @@ function render() {
             else action = `<button class="btn-action" style="padding:5px 10px; font-size:0.7rem;" onclick="submitZusage('${m.datum}')">DABEI!</button>`;
         } else if(isAdminMode) {
             const reqs = CloudDB.zusagen.filter(z => z.date === m.datum).map(z => z.user);
-            action = conf.map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("") + 
-                     reqs.map(n => `<span class="name-tag tag-request">? ${n} <button onclick="handleReq('${m.datum}','${n}')" style="cursor:pointer">✔</button></span>`).join("");
+            action = conf.map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("") + reqs.map(n => `<span class="name-tag tag-request">? ${n} <button onclick="handleReq('${m.datum}','${n}')" style="cursor:pointer">✔</button></span>`).join("");
         }
         return `<tr><td>${m.datum}</td><td>${m.ort}</td><td style="text-align:right">${h}</td><td>${m.played?m.tK+':'+m.tG:'-:-'}</td><td style="text-align:left">${g}</td><td>${action}</td></tr>`;
     }).join("");
@@ -284,23 +275,49 @@ function render() {
     document.getElementById("statCount").innerText = playedPast.length;
 }
 
-async function saveToCloud() { await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(CloudDB) }); }
+// --- MESSENGER FUNKTIONEN ---
+function renderMessages() {
+    const list = document.getElementById("msgList");
+    let vis = isAdminMode ? CloudDB.msgs : CloudDB.msgs.filter(m => m.to === "Alle" || m.to === filters.companion || m.from === filters.companion);
+    list.innerHTML = vis.length ? vis.reverse().map(m => `<div class="msg-item"><b>${m.from}:</b> ${m.txt}</div>`).join("") : "Keine Nachrichten.";
+}
 
+async function sendMessage() {
+    const txt = document.getElementById("msgInput").value; if(!txt) return;
+    CloudDB.msgs.push({ 
+        from: isAdminMode ? "Admin" : filters.companion, 
+        to: isAdminMode ? document.getElementById("msgTarget").value : "Admin", 
+        txt: txt, 
+        time: new Date().toLocaleTimeString() 
+    });
+    await saveToCloud(); 
+    document.getElementById("msgInput").value = ""; 
+    renderMessages();
+}
+
+async function submitZusage(d) {
+    CloudDB.zusagen.push({ user: filters.companion, date: d });
+    await saveToCloud(); render();
+}
+
+async function handleReq(d, u) {
+    CloudDB.zusagen = CloudDB.zusagen.filter(z => !(z.date===d && z.user===u));
+    await saveToCloud(); render();
+}
+
+async function saveToCloud() { await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(CloudDB) }); }
 function generateId() { return Math.random().toString(36).substr(2, 6); }
 
 async function copyLink() {
     const name = document.getElementById("companionSelect").value;
     if(!name) return alert("Wähle einen Namen!");
-    
-    // Prüfe ob User schon ID hat, sonst erstelle eine
     let id = Object.keys(CloudDB.userIds).find(key => CloudDB.userIds[key] === name);
     if(!id) {
         id = generateId();
         CloudDB.userIds[id] = name;
         await saveToCloud();
-        render(); // Update User-Status Tabelle
+        render();
     }
-    
     const url = window.location.origin + window.location.pathname + "?id=" + id;
     navigator.clipboard.writeText(url).then(() => alert("Kryptischer Link kopiert!"));
 }
