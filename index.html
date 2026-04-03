@@ -14,45 +14,44 @@
   body{ margin:0; padding:10px; background: var(--bg); color:var(--text); line-height: 1.5; }
   .container { max-width: 1650px; margin: 0 auto; display: none; } 
 
-  /* Login & Overlays */
+  /* Login Overlay */
   #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
   .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 380px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-  input[type="password"], input[type="text"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; text-align: center; }
+  input[type="password"], input[type="text"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 15px; text-align: center; font-size: 1rem; }
   .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
   
   /* Header */
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
   
-  /* NEUES POSTFACH DESIGN */
-  .msg-center { background: var(--card); border: 1px solid var(--blue); border-radius: 20px; padding: 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; }
-  .msg-layout { display: grid; grid-template-columns: 200px 1fr; gap: 15px; min-height: 300px; }
+  /* Messenger / Postfach */
+  .msg-center { background: var(--card); border: 1px solid var(--blue); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+  .msg-layout { display: grid; grid-template-columns: 220px 1fr; gap: 15px; min-height: 350px; }
   @media (max-width: 768px) { .msg-layout { grid-template-columns: 1fr; } }
   
-  .msg-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 5px; overflow-y: auto; max-height: 400px; }
-  .chat-tab { padding: 10px; border-radius: 10px; cursor: pointer; background: rgba(255,255,255,0.03); font-size: 0.85rem; border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; }
+  .msg-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 400px; padding-right: 10px; }
+  .chat-tab { padding: 12px; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.03); font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; }
   .chat-tab.active { background: var(--blue); border-color: #60a5fa; }
-  .unread-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; }
+  .unread-dot { width: 10px; height: 10px; background: var(--red); border-radius: 50%; box-shadow: 0 0 5px var(--red); }
 
-  .msg-content { display: flex; flex-direction: column; background: rgba(0,0,0,0.2); border-radius: 15px; padding: 15px; }
-  .msg-list { flex: 1; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; padding-right: 5px; }
+  .msg-content { display: flex; flex-direction: column; background: rgba(15, 23, 42, 0.5); border-radius: 15px; padding: 15px; border: 1px solid var(--border); }
+  .msg-list { flex: 1; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; padding-right: 10px; }
   
-  .msg-bubble { max-width: 85%; padding: 10px 15px; border-radius: 15px; font-size: 0.85rem; position: relative; }
-  .msg-bubble.admin { align-self: flex-end; background: var(--blue); border-bottom-right-radius: 2px; }
-  .msg-bubble.user { align-self: flex-start; background: var(--border); border-bottom-left-radius: 2px; }
-  .msg-meta { font-size: 0.65rem; color: var(--text-dim); margin-top: 5px; display: block; text-align: right; }
+  .msg-bubble { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 0.85rem; line-height: 1.4; }
+  .msg-bubble.me { align-self: flex-end; background: var(--blue); border-bottom-right-radius: 2px; }
+  .msg-bubble.them { align-self: flex-start; background: var(--border); border-bottom-left-radius: 2px; }
+  .msg-meta { font-size: 0.6rem; color: var(--text-dim); margin-top: 5px; display: block; }
 
-  /* Restliches Layout */
+  /* Stats & Tables */
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
   .stat-mini { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
-  .stat-mini b { display: block; font-size: 1.1rem; color: #fff; margin-top: 10px; }
+  .stat-mini b { display: block; font-size: 1.2rem; color: #fff; margin-top: 5px; }
+  .ticker-val { font-size: 2.2rem; font-weight: 900; color: #fff; text-align: center; margin-bottom: 5px; }
 
-  .table-container { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid var(--border); overflow-x: auto; }
+  .table-container { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid var(--border); overflow-x: auto; margin-bottom: 20px; }
   .match-table { width:100%; border-collapse:collapse; min-width: 600px; }
-  .match-table td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
-  
-  .name-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-flex; margin: 2px; }
-  .tag-confirmed { background: var(--win); color: #000; }
-  .ticker-val { font-size: 2.5rem; font-weight: 900; color: #fff; text-align: center; margin-bottom: 10px; }
+  .match-table td, .match-table th { padding: 12px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .tag-confirmed { background: var(--win); color: #000; font-weight: 700; padding: 3px 8px; border-radius: 5px; font-size: 0.7rem; }
+  .tag-request { background: var(--amber); color: #000; font-weight: 700; padding: 3px 8px; border-radius: 5px; font-size: 0.7rem; }
 </style>
 </head>
 <body>
@@ -60,7 +59,7 @@
 <div id="loginOverlay">
     <div class="login-box">
         <h2 id="loginTitle">KSV Dashboard</h2>
-        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Initialisierung...</p>
+        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Lade Daten...</p>
         <input type="password" id="passInput" placeholder="Passwort...">
         <button class="btn-action" onclick="handleAuth()">LOGIN</button>
     </div>
@@ -70,29 +69,27 @@
   <div class="header">
     <div>
         <h2 id="viewTitle">KSV LIVE MANAGER</h2>
-        <div id="statusInfo">Daten synchron...</div>
+        <div id="statusInfo" style="font-size: 0.7rem; color: var(--win);">● System bereit</div>
     </div>
     <button class="btn-action" style="width:auto; background:var(--red)" onclick="logout()">LOGOUT</button>
   </div>
 
   <div class="msg-center">
-      <h3 style="margin:0; font-size: 1rem; color: #60a5fa;">💬 POSTFACH</h3>
+      <h3 style="margin:0 0 15px 0; font-size: 1rem; color: #60a5fa;">💬 POSTFACH</h3>
       <div class="msg-layout">
-          <div class="msg-sidebar" id="chatSidebar">
-              </div>
+          <div class="msg-sidebar" id="chatSidebar"></div>
           <div class="msg-content">
-              <div class="msg-list" id="msgList">
-                  <p style="color:var(--text-dim); text-align:center;">Wähle einen Chat aus...</p>
-              </div>
+              <div class="msg-list" id="msgList"></div>
               <div style="display:flex; gap:10px;">
-                  <input type="text" id="msgInput" style="flex:1; margin:0;" placeholder="Nachricht schreiben...">
+                  <input type="text" id="msgInput" style="flex:1; margin:0;" placeholder="Nachricht...">
                   <button class="btn-action" style="width:auto;" onclick="sendMessage()">SENDEN</button>
               </div>
           </div>
       </div>
   </div>
 
-  <div class="admin-panel" id="adminTools" style="display:none;">
+  <div class="admin-panel" id="adminTools" style="display:none; border: 1px solid var(--blue); padding: 20px; border-radius: 20px; margin-bottom: 20px;">
+    <h3 style="margin-top:0; color:#60a5fa; font-size: 0.9rem;">ADMIN STEUERUNG</h3>
     <div style="display:flex; gap:10px; flex-wrap: wrap;">
         <select id="companionSelect" style="flex:1; margin:0;"></select>
         <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
@@ -102,6 +99,7 @@
 
   <div class="ticker-card" style="background: var(--card); padding: 20px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border);">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
+    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase; text-align:center;">Seit dem letzten Stadionbesuch</div>
   </div>
 
   <div class="stats-bar">
@@ -112,16 +110,16 @@
   </div>
 
   <div class="table-container">
-    <h3>📅 SPIELPLAN</h3>
+    <h3 style="margin-top:0;">📅 SPIELPLAN</h3>
     <table class="match-table" id="matchTable">
-      <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Aktion</th></tr></thead>
+      <thead><tr><th>Datum</th><th>Ort</th><th>Gegner</th><th>Score</th><th>Aktion</th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
   
   <div id="adminSections" style="display:none; margin-top:20px; display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-    <div class="table-container"><h3>👤 RANKING</h3><table id="companionTable" style="width:100%;"><thead><tr><th>NAME</th><th>SPIELE</th></tr></thead><tbody></tbody></table></div>
-    <div class="table-container"><h3>🔑 USER-STATUS</h3><table id="userTable" style="width:100%;"><thead><tr><th>BEGLEITER</th><th>ID-LINK</th></tr></thead><tbody></tbody></table></div>
+    <div class="table-container"><h3>👤 RANKING</h3><table id="companionTable" style="width:100%; font-size: 0.8rem;"><thead><tr><th>NAME</th><th>SPIELE</th></tr></thead><tbody></tbody></table></div>
+    <div class="table-container"><h3>🔑 USER-STATUS</h3><table id="userTable" style="width:100%; font-size: 0.8rem;"><thead><tr><th>BEGLEITER</th><th>STATUS</th></tr></thead><tbody></tbody></table></div>
   </div>
 </div>
 
@@ -130,7 +128,8 @@ const FALLBACK_ADMIN_HASH = "80f84501a359739070381373516422d369f688034d6f6e52003
 const NPOINT_ID = "15abfbbebe2742f743b2"; 
 const DB_URL = `https://api.npoint.io/${NPOINT_ID}`;
 
-let data = [], CloudDB = { zusagen: [], msgs: [], users: {}, adminHash: null, userIds: {} }, filters = {companion: null}, isAdminMode = false, activeChat = "Alle";
+let data = [], CloudDB = { zusagen: [], msgs: [], users: {}, adminHash: null, userIds: {} }, 
+    filters = {companion: null}, isAdminMode = false, activeChat = "Alle";
 
 window.onload = async () => {
     await refreshData();
@@ -141,8 +140,10 @@ window.onload = async () => {
         filters.companion = CloudDB.userIds[id];
         activeChat = "Admin";
         document.getElementById("loginTitle").innerText = "Moin, " + filters.companion;
+        document.getElementById("loginDesc").innerText = CloudDB.users[filters.companion] ? "Bitte Passwort eingeben." : "Willkommen! Lege dein Passwort fest:";
     } else {
         document.getElementById("loginTitle").innerText = "KSV Admin";
+        document.getElementById("loginDesc").innerText = CloudDB.adminHash ? "Bitte Master-Passwort eingeben." : "Ersteinrichtung: Master-Passwort festlegen:";
     }
 };
 
@@ -154,15 +155,22 @@ async function hash(str) {
 
 async function handleAuth() {
     const pw = document.getElementById("passInput").value;
-    if(!pw) return alert("Passwort fehlt!");
+    if(!pw) return alert("Eingabe fehlt!");
     const pwHash = await hash(pw);
     const targetAdminHash = CloudDB.adminHash || FALLBACK_ADMIN_HASH;
 
-    if(pwHash === targetAdminHash) { showApp(true); return; }
-    if(filters.companion && (!CloudDB.users[filters.companion] || CloudDB.users[filters.companion] === pwHash)) {
-        if(!CloudDB.users[filters.companion]) { CloudDB.users[filters.companion] = pwHash; await saveToCloud(); }
-        showApp(false);
-    } else { alert("Falsches Passwort!"); }
+    if(pwHash === targetAdminHash) { 
+        if(!CloudDB.adminHash) { CloudDB.adminHash = pwHash; await saveToCloud(); }
+        showApp(true); 
+        return; 
+    }
+
+    if(filters.companion) {
+        if(!CloudDB.users[filters.companion] || CloudDB.users[filters.companion] === pwHash) {
+            if(!CloudDB.users[filters.companion]) { CloudDB.users[filters.companion] = pwHash; await saveToCloud(); }
+            showApp(false);
+        } else { alert("Passwort falsch!"); }
+    } else { alert("Kein gültiger Admin oder Begleiter-Link!"); }
 }
 
 async function showApp(isAdmin) {
@@ -172,6 +180,8 @@ async function showApp(isAdmin) {
     if(isAdmin) {
         document.getElementById("adminTools").style.display = "block";
         document.getElementById("adminSections").style.display = "grid";
+    } else {
+        document.getElementById("viewTitle").innerText = "Moin, " + filters.companion;
     }
     render();
     renderMessages();
@@ -183,10 +193,14 @@ async function refreshData() {
         const excelJson = await resExcel.json();
         CloudDB = await resCloud.json();
         if(!CloudDB.msgs) CloudDB.msgs = [];
+        if(!CloudDB.userIds) CloudDB.userIds = {};
+        if(!CloudDB.users) CloudDB.users = {};
+
         data = excelJson.map(r => ({
             fD: parseFixDate(r["Datum"] || r["datum"], r["Uhrzeit"] || r["uhrzeit"]),
             datum: r["Datum"] || r["datum"], gegner: r["Gegner"], meinVerein: r["Mein Verein"],
-            ort: (r["Ort"] || "H").toUpperCase(), played: r["Status"] === "Abgeschlossen", begleiter: (r["Begleiter"] || "").trim()
+            ort: (r["Ort"] || "H").toUpperCase(), tK: r["Tore Kiel"] || "", tG: r["Tore Gegner"] || "",
+            played: r["Status"] === "Abgeschlossen", begleiter: (r["Begleiter"] || "").trim()
         }));
     } catch(e) { console.error(e); }
 }
@@ -199,19 +213,18 @@ function parseFixDate(d, t) {
     return dO;
 }
 
-// --- MESSENGER LOGIK ---
+// MESSENGER FUNKTIONEN
 function renderMessages() {
     const sidebar = document.getElementById("chatSidebar");
     const list = document.getElementById("msgList");
     sidebar.innerHTML = "";
 
-    if (isAdminMode) {
-        // Sidebar für Admin: Alle Begleiter auflisten
-        const usersInChat = [...new Set(Object.values(CloudDB.userIds))].sort();
-        usersInChat.unshift("Alle");
+    const companionsInExcel = [...new Set(data.filter(m => m.begleiter && m.played).flatMap(m => m.begleiter.split(/,| und /).map(n => n.trim())))].filter(n => n && n !== "nicht im stadion").sort();
 
-        usersInChat.forEach(u => {
-            const hasUnread = CloudDB.msgs.some(m => m.from === u && !m.read);
+    if (isAdminMode) {
+        const chats = ["Alle", ...companionsInExcel];
+        chats.forEach(u => {
+            const hasUnread = CloudDB.msgs.some(m => m.from.startsWith(u) && !m.read);
             const div = document.createElement("div");
             div.className = `chat-tab ${activeChat === u ? 'active' : ''}`;
             div.innerHTML = `<span>${u}</span> ${hasUnread ? '<div class="unread-dot"></div>' : ''}`;
@@ -219,46 +232,39 @@ function renderMessages() {
             sidebar.appendChild(div);
         });
     } else {
-        // Sidebar für Begleiter: Nur Admin Tab
         sidebar.innerHTML = `<div class="chat-tab active">Admin</div>`;
     }
 
-    // Nachrichten filtern
-    let chatPartner = isAdminMode ? activeChat : filters.companion;
     let filtered = CloudDB.msgs.filter(m => {
         if(isAdminMode) {
-            return (m.from.startsWith(activeChat) || m.to === activeChat);
+            return (m.from.includes(activeChat) || m.to === activeChat);
         } else {
-            return (m.from.startsWith(filters.companion) || m.to === filters.companion || m.to === "Alle");
+            return (m.from.includes(filters.companion) || m.to === filters.companion || m.to === "Alle");
         }
     });
 
     list.innerHTML = filtered.length ? filtered.map(m => {
         const isMe = isAdminMode ? m.from.startsWith("Admin") : m.from.startsWith(filters.companion);
-        return `<div class="msg-bubble ${isMe ? 'admin' : 'user'}">
-            <div style="font-weight:bold; font-size:0.7rem; margin-bottom:3px;">${m.from}</div>
+        return `<div class="msg-bubble ${isMe ? 'me' : 'them'}">
+            <div style="font-weight:bold; font-size:0.65rem; margin-bottom:2px; opacity:0.8;">${m.from}</div>
             ${m.txt}
             <span class="msg-meta">${m.time}</span>
         </div>`;
-    }).join("") : `<p style="color:var(--text-dim); text-align:center;">Keine Nachrichten in ${activeChat}</p>`;
+    }).join("") : `<p style="color:var(--text-dim); text-align:center; font-size:0.8rem;">Keine Nachrichten vorhanden.</p>`;
     list.scrollTop = list.scrollHeight;
 }
 
 async function sendMessage() {
     const input = document.getElementById("msgInput");
     if(!input.value) return;
-
     const now = new Date();
-    const timeStr = now.toLocaleDateString('de-DE') + " " + now.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
+    const timeStr = now.toLocaleDateString('de-DE') + " " + now.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
     
     let senderLabel = isAdminMode ? `Admin < ${activeChat}` : `${filters.companion} < Admin`;
 
     CloudDB.msgs.push({ 
-        from: senderLabel, 
-        to: isAdminMode ? activeChat : "Admin", 
-        txt: input.value, 
-        time: timeStr,
-        read: false
+        from: senderLabel, to: isAdminMode ? activeChat : "Admin", 
+        txt: input.value, time: timeStr, read: false 
     });
 
     await saveToCloud();
@@ -268,11 +274,11 @@ async function sendMessage() {
 
 async function markAsRead(user) {
     let changed = false;
-    CloudDB.msgs.forEach(m => { if(m.from === user && !m.read) { m.read = true; changed = true; } });
+    CloudDB.msgs.forEach(m => { if(m.from.startsWith(user) && !m.read) { m.read = true; changed = true; } });
     if(changed) await saveToCloud();
 }
 
-// --- REST RENDERING ---
+// RENDERING
 function render() {
     const now = new Date();
     data.sort((a,b) => b.fD - a.fD);
@@ -281,19 +287,41 @@ function render() {
     
     if(history.length > 0) {
         const last = history[0].fD;
-        setInterval(() => {
+        const tick = () => {
             const diff = Math.max(0, new Date() - last);
             const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
             document.getElementById("liveTicker").innerText = `${d}t ${h}h ${m}m ${s}s`;
-        }, 1000);
+        };
+        tick(); setInterval(tick, 1000);
+        document.getElementById("statDays").innerText = Math.floor((now-last)/86400000) + " T.";
+    }
+
+    const comps = {};
+    data.forEach(m => { if(m.begleiter && m.played) m.begleiter.split(/,| und /).forEach(n => {
+        const name = n.trim(); if(!name || name === "nicht im stadion") return;
+        if(!comps[name]) comps[name] = 0; comps[name]++;
+    })});
+
+    if(isAdminMode) {
+        const sel = document.getElementById("companionSelect");
+        const sn = Object.keys(comps).sort();
+        sel.innerHTML = sn.map(n => `<option value="${n}">${n}</option>`).join("");
+        document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps).sort((a,b)=>b[1]-a[1]).map(([n,s])=>`<tr><td>${n}</td><td>${s}x</td></tr>`).join("");
+        document.getElementById("userTable").querySelector("tbody").innerHTML = sn.map(u => `<tr><td>${u}</td><td>${CloudDB.users[u]?'✅ Aktiv':'⏳ Wartend'}</td></tr>`).join("");
     }
 
     const tbody = document.getElementById("matchTable").querySelector("tbody");
     tbody.innerHTML = data.map(m => {
         const isFuture = !m.played && m.fD > now;
         if(filters.companion && !isFuture && !m.begleiter.includes(filters.companion)) return "";
-        return `<tr><td>${m.datum}</td><td>${m.ort}</td><td>${m.gegner}</td><td>-:-</td><td>${isFuture ? 'ZUKUNFT' : ''}</td></tr>`;
+        const score = m.played ? `${m.tK}:${m.tG}` : "-:-";
+        let action = isFuture ? '<span class="tag-request">ZUKUNFT</span>' : '';
+        if(isAdminMode && m.begleiter) action = m.begleiter.split(',').map(n => `<span class="tag-confirmed">${n.trim()}</span>`).join(' ');
+        return `<tr><td>${m.datum}</td><td>${m.ort}</td><td>${m.gegner}</td><td>${score}</td><td>${action}</td></tr>`;
     }).join("");
+    
+    document.getElementById("statCount").innerText = filters.companion ? history.length : playedPast.length;
+    document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
 }
 
 async function saveToCloud() { await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(CloudDB) }); }
@@ -303,8 +331,9 @@ async function copyLink() {
     let id = Object.keys(CloudDB.userIds).find(key => CloudDB.userIds[key] === name) || Math.random().toString(36).substr(2, 6);
     CloudDB.userIds[id] = name; await saveToCloud();
     navigator.clipboard.writeText(window.location.origin + window.location.pathname + "?id=" + id);
-    alert("Link kopiert!");
+    alert("Link für " + name + " kopiert!");
 }
+async function clearCloud() { if(confirm("ALLES LÖSCHEN?")) { CloudDB={zusagen:[],msgs:[],users:{},adminHash:null,userIds:{}}; await saveToCloud(); location.reload(); } }
 </script>
 </body>
 </html>
