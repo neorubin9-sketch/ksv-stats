@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>KSV – Live Manager Admin</title>
+<title>KSV – Live Manager Pro</title>
 <style>
   :root{ 
     --blue:#003f8c; --red:#e30613; --bg:#0f172a; --card:#1e293b; 
@@ -14,18 +14,31 @@
   body{ margin:0; padding:10px; background: var(--bg); color:var(--text); line-height: 1.5; }
   .container { max-width: 1650px; margin: 0 auto; display: none; } 
 
-  /* InfoBox / Toast Styles */
-  #infoBox {
-    position: fixed; top: 20px; right: 20px; z-index: 10000;
-    padding: 15px 25px; border-radius: 12px; color: white; font-weight: 700;
-    display: none; animation: slideIn 0.4s ease-out; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  /* Messenger / Nachrichtenzentrale */
+  .msg-center { 
+    background: var(--card); border: 1px solid var(--blue); border-radius: 20px; 
+    padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   }
-  @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  .msg-list { max-height: 150px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; }
+  .msg-item { 
+    padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; 
+    border-left: 4px solid var(--blue); background: rgba(255,255,255,0.03);
+  }
+  .msg-item.broadcast { border-left-color: var(--amber); background: rgba(245, 158, 11, 0.05); }
+  .msg-item.admin-note { border-left-color: var(--win); }
 
+  .msg-input-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .msg-input { 
+    flex: 1; background: var(--bg); border: 1px solid var(--border); 
+    color: white; padding: 10px; border-radius: 8px; min-width: 200px;
+  }
+
+  /* Standard Elemente */
   #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
   .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 350px; }
   input[type="password"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 20px; text-align: center; }
-  .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; }
+  .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; transition: 0.2s; }
+  .btn-action:hover { opacity: 0.8; transform: translateY(-2px); }
   
   .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
   .admin-panel { background: rgba(96, 165, 250, 0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--blue); margin-bottom: 20px; }
@@ -45,30 +58,23 @@
   .match-table th { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; padding: 10px; border-bottom: 1px solid var(--border); }
   .match-table td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; text-align: center; }
   
-  .logo-img { width: 30px; height: 30px; object-fit: contain; vertical-align: middle; margin: 0 5px; }
-  .score-box { background: #0f172a; padding: 5px 0; border-radius: 8px; width: 65px; display: inline-block; font-weight: 800; border: 1px solid var(--border); }
+  .logo-img { width: 28px; height: 28px; object-fit: contain; vertical-align: middle; }
+  .score-box { background: #0f172a; padding: 5px 0; border-radius: 8px; width: 60px; display: inline-block; font-weight: 800; border: 1px solid var(--border); }
   
-  .name-tag { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px; margin: 2px; }
+  .name-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; margin: 2px; }
   .tag-confirmed { background: var(--win); color: #000; }
-  .tag-request { background: var(--amber); color: #000; font-style: italic; }
+  .tag-request { background: var(--amber); color: #000; }
   
-  .btn-mini { border:none; border-radius:4px; padding:2px 6px; cursor:pointer; font-size: 0.7rem; font-weight: 900; margin-left: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: 0.2s; }
-  .btn-mini:hover { transform: scale(1.1); }
-  .btn-ok { background: #fff; color: var(--win); }
-  .btn-no { background: #fff; color: var(--red); }
-
-  .st-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; background: var(--win); margin-right: 5px; }
-  .btn-zusage { background: var(--blue); color: #fff; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 800; cursor: pointer; width: 100%; }
-  .future-row { background: rgba(96, 165, 250, 0.03); }
+  .btn-mini { border:none; border-radius:4px; padding:1px 4px; cursor:pointer; font-size: 0.6rem; font-weight: 900; }
+  .st-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--win); margin-right: 5px; }
+  .future-row { background: rgba(96, 165, 250, 0.02); }
 </style>
 </head>
 <body>
 
-<div id="infoBox"></div>
-
 <div id="loginOverlay">
     <div class="login-box">
-        <h2>KSV Dashboard Login</h2>
+        <h2>KSV Dashboard</h2>
         <input type="password" id="passInput" placeholder="Passwort...">
         <button class="btn-action" onclick="checkLogin()">LOGIN</button>
     </div>
@@ -78,28 +84,40 @@
   <div class="header">
     <div>
         <h2 id="viewTitle">KSV LIVE MANAGER</h2>
-        <div id="statusInfo">Lade Daten...</div>
+        <div id="statusInfo">Synchronisierung...</div>
     </div>
     <button class="btn-action" style="width:auto; background:var(--red)" onclick="logout()">LOGOUT</button>
+  </div>
+
+  <div class="msg-center" id="msgCenter">
+      <h3 style="margin-top:0; font-size: 1rem; color: #60a5fa;">💬 NACHRICHTEN</h3>
+      <div class="msg-list" id="msgList">
+          <div class="msg-item">Keine neuen Nachrichten vorhanden.</div>
+      </div>
+      <div class="msg-input-group">
+          <select id="msgTarget" style="margin:0; width: 120px; padding: 8px; display:none;"></select>
+          <input type="text" id="msgInput" class="msg-input" placeholder="Nachricht schreiben...">
+          <button class="btn-action" style="width:auto; padding: 10px 20px;" onclick="sendMessage()">SENDEN</button>
+      </div>
   </div>
 
   <div class="admin-panel" id="adminTools">
     <div style="display:flex; gap:10px; flex-wrap: wrap;">
         <select id="companionSelect" style="margin:0; flex:1; min-width: 200px;"></select>
         <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
-        <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET REQUESTS</button>
+        <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET SYSTEM</button>
     </div>
   </div>
 
   <div class="ticker-card">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Zeit ohne Stadion</div>
+    <div style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Abwesenheit vom Stadion</div>
   </div>
 
   <div class="stats-bar">
     <div class="stat-mini"><span>Besuche</span><b id="statCount">-</b></div>
     <div class="stat-mini"><span>Status</span><b id="statStatus">Aktiv</b></div>
-    <div class="stat-mini"><span>Anstehend</span><b id="statTotal">-</b></div>
+    <div class="stat-mini"><span>Offen</span><b id="statTotal">-</b></div>
     <div class="stat-mini"><span>Zuletzt vor</span><b id="statDays">-</b></div>
   </div>
 
@@ -126,7 +144,7 @@ const ADMIN_PASSWORD = "KSV";
 const NPOINT_ID = "15abfbbebe2742f743b2"; 
 const DB_URL = `https://api.npoint.io/${NPOINT_ID}`;
 
-let data = [], ZusagenCloud = [], filters = {companion: null}, tickerInterval = null, isAdminMode = false;
+let data = [], CloudDB = { zusagen: [], msgs: [] }, filters = {companion: null}, tickerInterval = null, isAdminMode = false;
 
 window.onload = async () => {
     const params = new URLSearchParams(window.location.search);
@@ -141,16 +159,9 @@ window.onload = async () => {
 function checkLogin() {
     if(document.getElementById("passInput").value === ADMIN_PASSWORD) {
         isAdminMode = true;
+        document.getElementById("msgTarget").style.display = "block";
         showApp(true);
-    } else alert("Falsches Passwort!");
-}
-
-function showToast(msg, color) {
-    const box = document.getElementById("infoBox");
-    box.innerText = msg;
-    box.style.backgroundColor = color;
-    box.style.display = "block";
-    setTimeout(() => { box.style.display = "none"; }, 4000);
+    } else alert("Passwort falsch!");
 }
 
 async function showApp(isAdmin) {
@@ -170,30 +181,25 @@ async function refreshData() {
             fetch(DB_URL)
         ]);
         const excelJson = await resExcel.json();
-        const cloudJson = await resCloud.json();
-        ZusagenCloud = cloudJson.zusagen || [];
+        CloudDB = await resCloud.json();
+        if(!CloudDB.zusagen) CloudDB.zusagen = [];
+        if(!CloudDB.msgs) CloudDB.msgs = [];
         
-        data = excelJson.map(r => {
-            const isAbgeschlossen = r["Status"] === "Abgeschlossen";
-            const hatErgebnis = r["Tore Kiel"] !== "" && r["Tore Kiel"] !== undefined;
-            return {
-                fD: parseFixDate(r["Datum"] || r["datum"], r["Uhrzeit"] || r["uhrzeit"]),
-                datum: r["Datum"] || r["datum"], 
-                gegner: r["Gegner"], 
-                meinVerein: r["Mein Verein"],
-                ort: (r["Ort"] || "H").toUpperCase(),
-                tK: r["Tore Kiel"] || "", 
-                tG: r["Tore Gegner"] || "",
-                played: isAbgeschlossen || hatErgebnis,
-                begleiter: (r["Begleiter"] || "").trim()
-            };
-        });
+        data = excelJson.map(r => ({
+            fD: parseFixDate(r["Datum"] || r["datum"], r["Uhrzeit"] || r["uhrzeit"]),
+            datum: r["Datum"] || r["datum"], 
+            gegner: r["Gegner"], 
+            meinVerein: r["Mein Verein"],
+            ort: (r["Ort"] || "H").toUpperCase(),
+            tK: r["Tore Kiel"] || "", 
+            tG: r["Tore Gegner"] || "",
+            played: r["Status"] === "Abgeschlossen",
+            begleiter: (r["Begleiter"] || "").trim()
+        }));
         
         render();
-        document.getElementById("statusInfo").innerText = "Daten synchronisiert";
-    } catch (e) { 
-        document.getElementById("statusInfo").innerText = "Fehler!"; 
-    }
+        renderMessages();
+    } catch (e) { console.error("Sync Error", e); }
 }
 
 function parseFixDate(dStr, tStr) {
@@ -209,6 +215,51 @@ function parseFixDate(dStr, tStr) {
         return dO;
     }
     return new Date();
+}
+
+function renderMessages() {
+    const list = document.getElementById("msgList");
+    let visibleMsgs = [];
+
+    if(isAdminMode) {
+        visibleMsgs = CloudDB.msgs; // Admin sieht alles
+    } else {
+        // Begleiter sieht Broadcasts ODER Nachrichten an sich selbst
+        visibleMsgs = CloudDB.msgs.filter(m => m.to === "Alle" || m.to === filters.companion || m.from === filters.companion);
+    }
+
+    if(visibleMsgs.length === 0) {
+        list.innerHTML = '<div class="msg-item">Keine Nachrichten vorhanden.</div>';
+        return;
+    }
+
+    list.innerHTML = visibleMsgs.reverse().map(m => `
+        <div class="msg-item ${m.to === 'Alle' ? 'broadcast' : ''} ${m.from === 'Admin' ? 'admin-note' : ''}">
+            <small style="color:var(--text-dim)">${m.time} | von ${m.from}:</small><br>
+            <b>${m.txt}</b>
+        </div>
+    `).join("");
+}
+
+async function sendMessage() {
+    const input = document.getElementById("msgInput");
+    const target = document.getElementById("msgTarget").value || "Admin";
+    if(!input.value.trim()) return;
+
+    const newMsg = {
+        from: isAdminMode ? "Admin" : filters.companion,
+        to: isAdminMode ? target : "Admin",
+        txt: input.value.trim(),
+        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+    };
+
+    CloudDB.msgs.push(newMsg);
+    // Behalte nur die letzten 20 Nachrichten
+    if(CloudDB.msgs.length > 20) CloudDB.msgs.shift();
+
+    await saveToCloud();
+    input.value = "";
+    renderMessages();
 }
 
 function render() {
@@ -235,7 +286,7 @@ function render() {
         const confirmedList = m.begleiter ? m.begleiter.split(/,| und /).map(n => n.trim()).filter(n => n && n.toLowerCase() !== 'nicht im stadion') : [];
         const isUserConfirmed = confirmedList.includes(filters.companion || "");
         
-        const requests = ZusagenCloud.filter(z => z.date === m.datum).map(z => z.user);
+        const requests = CloudDB.zusagen.filter(z => z.date === m.datum).map(z => z.user);
         const hasRequested = requests.includes(filters.companion);
 
         if(filters.companion && !isFuture && !isUserConfirmed) return "";
@@ -246,18 +297,15 @@ function render() {
                 if(isUserConfirmed) actionHtml = '<span class="name-tag tag-confirmed">BESTÄTIGT ✅</span>';
                 else if(hasRequested) actionHtml = '<span class="name-tag tag-request">ANGEFRAGT...</span>';
                 else actionHtml = `<button class="btn-zusage" onclick="submitZusage('${m.datum}', '${m.gegner}')">DABEI!</button>`;
-            } else if(isUserConfirmed) {
-                actionHtml = '<span class="st-dot"></span> Dabei';
-            }
+            } else if(isUserConfirmed) actionHtml = '<span class="st-dot"></span> Dabei';
         } else {
             let tags = confirmedList.map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("");
             let reqs = requests.map(n => `
-                <span class="name-tag tag-request">
-                    ? ${n} 
-                    <button class="btn-mini btn-ok" onclick="handleAdminRequest('${m.datum}', '${n}', true, '${m.gegner}')">✔</button>
-                    <button class="btn-mini btn-no" onclick="handleAdminRequest('${m.datum}', '${n}', false, '${m.gegner}')">✖</button>
+                <span class="name-tag tag-request">? ${n} 
+                    <button class="btn-mini" style="background:#fff" onclick="handleAdminRequest('${m.datum}', '${n}', true, '${m.gegner}')">✔</button>
+                    <button class="btn-mini" style="background:#fff; color:var(--red)" onclick="handleAdminRequest('${m.datum}', '${n}', false, '${m.gegner}')">✖</button>
                 </span>`).join("");
-            actionHtml = `<div class="name-container">${tags}${reqs}</div>`;
+            actionHtml = `<div style="display:flex; flex-direction:column;">${tags}${reqs}</div>`;
         }
 
         const heim = m.ort === 'H' ? m.meinVerein : m.gegner;
@@ -266,9 +314,9 @@ function render() {
         return `<tr class="${isFuture ? 'future-row' : ''}">
             <td style="font-size:0.7rem">${m.datum}</td>
             <td><span style="font-size:8px; padding:2px 4px; background:#334155; border-radius:3px;">${m.ort}</span></td>
-            <td style="text-align:right"><b>${heim}</b> <img src="logos/${heim}.png" class="logo-img" onerror="this.style.visibility='hidden'"></td>
+            <td style="text-align:right"><b>${heim}</b> <img src="logos/${heim}.png" class="logo-img" onerror="this.style.display='none'"></td>
             <td><div class="score-box">${m.played ? (m.ort=='H'?m.tK+':'+m.tG:m.tG+':'+m.tK) : '-:-'}</div></td>
-            <td style="text-align:left"><img src="logos/${gast}.png" class="logo-img" onerror="this.style.visibility='hidden'"> <b>${gast}</b></td>
+            <td style="text-align:left"><img src="logos/${gast}.png" class="logo-img" onerror="this.style.display='none'"> <b>${gast}</b></td>
             <td>${actionHtml}</td>
         </tr>`;
     }).join("");
@@ -284,7 +332,9 @@ function render() {
                 });
             }
         });
-        document.getElementById("companionSelect").innerHTML = '<option value="">Name wählen...</option>' + Object.keys(comps).sort().map(n => `<option value="${n}">${n}</option>`).join("");
+        const sortedNames = Object.keys(comps).sort();
+        document.getElementById("companionSelect").innerHTML = '<option value="">Name wählen...</option>' + sortedNames.map(n => `<option value="${n}">${n}</option>`).join("");
+        document.getElementById("msgTarget").innerHTML = '<option value="Alle">An Alle</option>' + sortedNames.map(n => `<option value="${n}">${n}</option>`).join("");
         document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps).sort((a,b)=>b[1].sp - a[1].sp).map(([n, s]) => `<tr><td style="padding:10px; text-align:left;"><b>${n}</b></td><td>${s.sp}x</td><td>${s.last ? Math.floor((now-s.last)/86400000)+'T.' : '-'}</td></tr>`).join("");
         document.getElementById("statCount").innerText = playedPast.length;
         document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
@@ -295,39 +345,36 @@ function render() {
 }
 
 async function handleAdminRequest(datum, user, accept, gegner) {
-    if(accept) {
-        showToast(`Anfrage von ${user} (vs. ${gegner}) ANGENOMMEN!`, "var(--win)");
-    } else {
-        showToast(`Anfrage von ${user} (vs. ${gegner}) ABGELEHNT!`, "var(--red)");
-    }
-    ZusagenCloud = ZusagenCloud.filter(z => !(z.date === datum && z.user === user));
+    const statusTxt = accept ? "ANGENOMMEN" : "ABGELEHNT";
+    CloudDB.msgs.push({
+        from: "Admin", to: user, txt: `Deine Anfrage für das Spiel vs. ${gegner} wurde ${statusTxt}.`,
+        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+    });
+    CloudDB.zusagen = CloudDB.zusagen.filter(z => !(z.date === datum && z.user === user));
     await saveToCloud();
     refreshData();
 }
 
 async function submitZusage(datum, gegner) {
-    if(!filters.companion) return;
-    if(ZusagenCloud.some(z => z.date === datum && z.user === filters.companion)) return alert("Bereits angefragt!");
-    
-    ZusagenCloud.push({ user: filters.companion, date: datum });
+    CloudDB.zusagen.push({ user: filters.companion, date: datum });
+    CloudDB.msgs.push({
+        from: filters.companion, to: "Admin", txt: `Ich möchte beim Spiel vs. ${gegner} dabei sein!`,
+        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+    });
     await saveToCloud();
-    showToast(`Anfrage für das Spiel gegen ${gegner} gesendet!`, "var(--blue)");
     refreshData();
 }
 
 async function saveToCloud() {
-    await fetch(DB_URL, { 
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify({ zusagen: ZusagenCloud }) 
-    });
+    document.getElementById("statusInfo").innerText = "Speichere...";
+    await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(CloudDB) });
+    document.getElementById("statusInfo").innerText = "Gespeichert";
 }
 
 async function clearCloud() {
-    if(confirm("Alle offenen Anfragen löschen?")) {
-        ZusagenCloud = [];
+    if(confirm("Cloud komplett zurücksetzen? (Löscht alle Nachrichten & Anfragen)")) {
+        CloudDB = { zusagen: [], msgs: [] };
         await saveToCloud();
-        showToast("Alle Anfragen gelöscht.", "var(--red)");
         refreshData();
     }
 }
@@ -336,7 +383,7 @@ function copyLink() {
     const name = document.getElementById("companionSelect").value;
     if(!name) return alert("Namen wählen!");
     const url = window.location.origin + window.location.pathname + "?user=" + encodeURIComponent(name);
-    navigator.clipboard.writeText(url).then(() => showToast("Link kopiert!", "var(--blue)"));
+    navigator.clipboard.writeText(url).then(() => alert("Link kopiert!"));
 }
 function logout() { window.location.href = window.location.pathname; }
 </script>
