@@ -134,7 +134,7 @@ window.onload = async () => {
     if(id && CloudDB.userIds[id]) {
         filters.companion = CloudDB.userIds[id];
         document.getElementById("loginTitle").innerText = "Moin, " + filters.companion;
-        document.getElementById("loginDesc").innerText = CloudDB.users[filters.companion] ? "Bitte Passwort eingeben." : "Noch kein Passwort gesetzt. Lege jetzt eines fest:";
+        document.getElementById("loginDesc").innerText = CloudDB.users[filters.companion] ? "Bitte dein Passwort eingeben." : "Noch kein Passwort gesetzt. Lege jetzt eines fest:";
     } else {
         document.getElementById("loginTitle").innerText = "KSV Admin";
         document.getElementById("loginDesc").innerText = CloudDB.adminHash ? "Bitte Master-Passwort eingeben." : "System-Einrichtung: Lege jetzt dein Master-Passwort fest:";
@@ -278,12 +278,14 @@ function render() {
 // --- MESSENGER FUNKTIONEN ---
 function renderMessages() {
     const list = document.getElementById("msgList");
+    if(!CloudDB.msgs) CloudDB.msgs = [];
     let vis = isAdminMode ? CloudDB.msgs : CloudDB.msgs.filter(m => m.to === "Alle" || m.to === filters.companion || m.from === filters.companion);
     list.innerHTML = vis.length ? vis.reverse().map(m => `<div class="msg-item"><b>${m.from}:</b> ${m.txt}</div>`).join("") : "Keine Nachrichten.";
 }
 
 async function sendMessage() {
     const txt = document.getElementById("msgInput").value; if(!txt) return;
+    if(!CloudDB.msgs) CloudDB.msgs = [];
     CloudDB.msgs.push({ 
         from: isAdminMode ? "Admin" : filters.companion, 
         to: isAdminMode ? document.getElementById("msgTarget").value : "Admin", 
