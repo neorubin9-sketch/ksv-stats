@@ -1,301 +1,246 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-<title>KSV – Live Manager</title>
-<style>
-  :root{ 
-    --blue:#003f8c; --red:#e30613; --bg:#0f172a; --card:#1e293b; 
-    --border:#334155; --text:#f8fafc; --text-dim:#94a3b8;
-    --win:#22c55e; --amber:#f59e0b;
-  }
-  *{box-sizing:border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent;}
-  body{ margin:0; padding:10px; background: var(--bg); color:var(--text); line-height: 1.5; }
-  .container { max-width: 1650px; margin: 0 auto; display: none; } 
-
-  #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); display:flex; align-items:center; justify-content:center; z-index:9999; flex-direction: column; padding: 20px; }
-  .login-box { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid var(--border); text-align:center; width: 100%; max-width: 350px; }
-  input[type="password"], select { background: var(--bg); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; width: 100%; margin-bottom: 20px; text-align: center; }
-  .btn-action { background: var(--blue); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 800; width: 100%; }
-  
-  .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; background: linear-gradient(135deg, var(--blue), #001f44); padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
-  .admin-panel { background: rgba(96, 165, 250, 0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--blue); margin-bottom: 20px; }
-  
-  .ticker-card { background: var(--card); border: 2px solid #60a5fa; border-radius: 20px; padding: 20px; margin-bottom: 20px; text-align: center; }
-  .ticker-val { font-size: 2.5rem; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
-  
-  .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-  .stat-mini { background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border); text-align: center; }
-  .stat-mini b { font-size: 1rem; color: #fff; }
-
-  .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-  @media (min-width: 1200px) { .main-grid { grid-template-columns: 1.8fr 1.2fr; } }
-  
-  .table-container { background: var(--card); border-radius: 20px; padding: 15px; border: 1px solid var(--border); overflow-x: auto; }
-  .match-table { width:100%; border-collapse:collapse; min-width: 600px; }
-  .match-table th { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; padding: 10px; border-bottom: 1px solid var(--border); }
-  .match-table td { padding: 12px 5px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; text-align: center; }
-  
-  .score-box { background: #0f172a; padding: 5px 0; border-radius: 8px; width: 65px; display: inline-block; font-weight: 800; border: 1px solid var(--border); }
-  
-  .name-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .name-tag { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; display: inline-block; }
-  .tag-confirmed { background: var(--win); color: #000; }
-  .tag-request { background: var(--amber); color: #000; font-style: italic; }
-  
-  .st-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-  .st-on { background: var(--win); }
-  .btn-zusage { background: var(--blue); color: #fff; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 800; font-size: 0.7rem; cursor: pointer; width: 100%; transition: 0.2s; }
-  .btn-zusage:hover { transform: scale(1.05); background: #0056b3; }
-  .future-row { background: rgba(96, 165, 250, 0.03); }
-</style>
+    <meta charset="UTF-8">
+    <title>⚽ Holstein Kiel Statistik Deluxe 8.2</title>
+    <style>
+        body { font-family: "Inter", sans-serif; background: #f8fafc; margin: 0; padding: 0 2rem 4rem; color: #2c3e50; }
+        header { display: flex; flex-direction: column; align-items: center; padding: 1.5rem 0; border-bottom: 5px solid #0a3c78; margin-bottom: 20px; }
+        h1 { color: #0a3c78; font-weight: 800; margin-bottom: 0.5rem; }
+        .tabs { display: flex; justify-content: center; gap: 0.75rem; margin-top: 1.5rem; }
+        .tab { background: #e2e8f0; border: 1px solid #cbd5e1; padding: 0.8rem 1.6rem; cursor: pointer; font-weight: 700; color: #64748b; border-radius: 12px 12px 0 0; }
+        .tab.active { background: #0a3c78; color: #fff; }
+        .tab-content { display: none; background: #fff; padding: 2rem; border-radius: 0 15px 15px 15px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+        .tab-content.active { display: block; }
+        table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; border: 1px solid #e2e8f0; }
+        th { background: #0a3c78; color: #fff; padding: 12px; text-align: center; font-size: 0.85rem; cursor: pointer; }
+        td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; font-size: 0.9rem; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        .btn { cursor: pointer; background: #0a3c78; color: #fff; padding: 12px 24px; border-radius: 8px; border: none; font-weight: 600; margin-bottom: 20px; }
+        
+        @keyframes blink-red {
+            0% { color: #e67e22; }
+            50% { color: #ff0000; font-weight: 900; transform: scale(1.1); }
+            100% { color: #e67e22; }
+        }
+        .alarm-24h { animation: blink-red 0.8s infinite; display: inline-block; }
+    </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <div class="login-box">
-        <h2 style="margin-bottom:20px;">KSV Dashboard</h2>
-        <input type="password" id="passInput" placeholder="Admin Passwort...">
-        <button class="btn-action" onclick="checkLogin()">ADMIN LOGIN</button>
+    <header><h1>⚽ Holstein Kiel Statistik Deluxe 8.2</h1></header>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="tab1">📋 Spiele</button>
+        <button class="tab" data-tab="tab3" id="tabStats">📊 Statistiken</button>
     </div>
-</div>
 
-<div class="container" id="mainApp">
-  <div class="header">
-    <div>
-        <h2 id="viewTitle" style="margin:0; font-size: 1.4rem;">KSV LIVE MANAGER</h2>
-        <div id="statusInfo" style="color:var(--text-dim); font-size: 0.75rem;">Lade Daten...</div>
+    <div id="tab1" class="tab-content active">
+        <input type="file" id="excelInput" class="btn">
+        <div id="tblSpiele"></div>
     </div>
-    <button class="btn-action" style="width:auto; background:var(--red)" onclick="logout()">LOGOUT</button>
-  </div>
 
-  <div class="admin-panel" id="adminTools">
-    <div style="display:flex; gap:10px; flex-wrap: wrap;">
-        <select id="companionSelect" style="margin:0; flex:1; min-width: 200px;"></select>
-        <button class="btn-action" style="width:auto;" onclick="copyLink()">LINK KOPIEREN</button>
-        <button class="btn-action" style="width:auto; background:var(--red);" onclick="clearCloud()">RESET REQUESTS</button>
+    <div id="tab3" class="tab-content">
+        <div id="statsBegleiter"></div>
     </div>
-  </div>
 
-  <div class="ticker-card">
-    <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
-    <div id="tickerLabel" style="color:var(--text-dim); font-size: 0.7rem; text-transform: uppercase;">Seit deinem letzten Stadionbesuch</div>
-  </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        const meinGeburtstag = "27.11.1998";
+        let matches = [];
+        let statsInterval;
+        const $ = s => document.querySelector(s);
 
-  <div class="stats-bar">
-    <div class="stat-mini"><span>Besuchte Spiele</span><b id="statCount">-</b></div>
-    <div class="stat-mini"><span>Status</span><b id="statStatus">Aktiv</b></div>
-    <div class="stat-mini"><span>Gesehen</span><b id="statSeen">0</b></div>
-    <div class="stat-mini"><span>Längste Pause</span><b id="statMax">-</b></div>
-  </div>
-
-  <div class="main-grid">
-    <div class="table-container">
-      <h3>📅 SPIELPLAN</h3>
-      <table class="match-table" id="matchTable">
-        <thead><tr><th>Datum</th><th>Ort</th><th style="text-align:right">Heim</th><th>Score</th><th style="text-align:left">Gast</th><th>Status / Aktion</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-    <div class="table-container" id="companionSection">
-        <h3>👤 BEGLEITER-RANKING</h3>
-        <table id="companionTable" style="width:100%; border-collapse:collapse;">
-          <thead><tr style="color:var(--text-dim); font-size: 0.6rem;"><th>NAME</th><th>SPIELE</th><th>ZULETZT</th></tr></thead>
-          <tbody></tbody>
-        </table>
-    </div>
-  </div>
-</div>
-
-<script>
-const ADMIN_PASSWORD = "KSV"; 
-const NPOINT_ID = "15abfbbebe2742f743b2"; 
-const DB_URL = `https://api.npoint.io/${NPOINT_ID}`;
-
-let data = [], ZusagenCloud = [], filters = {companion: null}, tickerInterval = null;
-
-window.onload = async () => {
-    const params = new URLSearchParams(window.location.search);
-    const user = params.get('user');
-    if(user) { 
-        filters.companion = decodeURIComponent(user); 
-        document.getElementById("viewTitle").innerText = "Moin, " + filters.companion + "!";
-        showApp(false); 
-    }
-};
-
-function checkLogin() {
-    if(document.getElementById("passInput").value === ADMIN_PASSWORD) showApp(true);
-    else alert("Passwort falsch!");
-}
-
-async function showApp(isAdmin) {
-    document.getElementById("loginOverlay").style.display = "none";
-    document.getElementById("mainApp").style.display = "block";
-    if(!isAdmin) {
-        document.getElementById("adminTools").style.display = "none";
-        document.getElementById("companionSection").style.display = "none";
-    }
-    await refreshData();
-}
-
-async function refreshData() {
-    try {
-        const [resExcel, resCloud] = await Promise.all([
-            fetch('daten.json?v=' + Date.now()),
-            fetch(DB_URL)
-        ]);
-        const excelJson = await resExcel.json();
-        const cloudJson = await resCloud.json();
-        ZusagenCloud = cloudJson.zusagen || [];
-        
-        data = excelJson.map(r => ({
-            fD: parseFixDate(r["Datum"] || r["datum"], r["Uhrzeit"] || r["uhrzeit"]),
-            datum: r["Datum"] || r["datum"], 
-            gegner: r["Gegner"], 
-            meinVerein: r["Mein Verein"],
-            ort: (r["Ort"] || "H").toUpperCase(),
-            tK: r["Tore Kiel"] || "", 
-            tG: r["Tore Gegner"] || "",
-            played: r["Status"] === "Abgeschlossen",
-            begleiter: (r["Begleiter"] || "").trim()
-        }));
-        
-        render();
-        document.getElementById("statusInfo").innerText = "Daten synchronisiert";
-    } catch (e) { 
-        document.getElementById("statusInfo").innerText = "Fehler beim Laden!"; 
-    }
-}
-
-// Angepasst für dein Format "Sun, 30/07/2017"
-function parseFixDate(dStr, tStr) {
-    if (!dStr) return new Date();
-    // Entferne Wochentag (z.B. "Sun, ")
-    let clean = dStr.includes(',') ? dStr.split(',')[1].trim() : dStr.trim();
-    const parts = clean.split('/');
-    if (parts.length === 3) {
-        let dO = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-        if (tStr) {
-            const tp = tStr.replace(' Uhr', '').split(':');
-            if(tp.length >= 2) dO.setHours(tp[0], tp[1]);
-        }
-        return dO;
-    }
-    return new Date();
-}
-
-function render() {
-    const now = new Date();
-    data.sort((a,b) => b.fD - a.fD);
-    
-    const playedPast = data.filter(d => d.played);
-    const userHistory = playedPast.filter(m => m.begleiter.includes(filters.companion || "---"));
-    
-    // Ticker Update
-    if (userHistory.length > 0) {
-        userHistory.sort((a,b) => a.fD - b.fD);
-        const lastVisit = userHistory[userHistory.length-1].fD;
-        if(tickerInterval) clearInterval(tickerInterval);
-        tickerInterval = setInterval(() => {
-            const diff = Math.max(0, new Date() - lastVisit);
-            const d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
-            document.getElementById("liveTicker").innerText = `${d}t ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
-        }, 1000);
-    }
-
-    const tbody = document.getElementById("matchTable").querySelector("tbody");
-    tbody.innerHTML = data.map(m => {
-        const isFuture = !m.played;
-        const confirmedList = m.begleiter ? m.begleiter.split(/,| und /).map(n => n.trim()) : [];
-        const isUserConfirmed = confirmedList.includes(filters.companion || "");
-        const requests = ZusagenCloud.filter(z => z.date === m.datum).map(z => z.user);
-        const hasRequested = requests.includes(filters.companion);
-
-        if(filters.companion && !isFuture && !isUserConfirmed) return "";
-
-        let actionHtml = "";
-        if(filters.companion) {
-            if(isFuture) {
-                if(isUserConfirmed) {
-                    actionHtml = '<span class="name-tag tag-confirmed">BESTÄTIGT ✅</span>';
-                } else if(hasRequested) {
-                    actionHtml = '<span class="name-tag tag-request">ANGEFRAGT...</span>';
-                } else {
-                    actionHtml = `<button class="btn-zusage" onclick="submitZusage('${m.datum}')">DABEI!</button>`;
-                }
+        function parseDate(v) {
+            if (!v) return null;
+            if (v instanceof Date) return v;
+            let d;
+            if (typeof v === "number") {
+                d = new Date(Math.round((v - 25569) * 86400 * 1000));
+                d.setMinutes(d.getMinutes() + d.getTimezoneOffset()); 
             } else {
-                actionHtml = '<span class="st-dot st-on"></span> Dabeigewesen';
+                let s = String(v).replace(/^[a-zA-Z]{2,3}, /g, "").replace(/ Uhr/g, "").trim();
+                const parts = s.split(/[. :/-]/);
+                if (parts.length >= 3) {
+                    let year = parts[2].length === 2 ? "20" + parts[2] : parts[2];
+                    d = new Date(year, parts[1] - 1, parts[0], parts[3] || 0, parts[4] || 0);
+                } else { d = new Date(v); }
             }
-        } else {
-            let tags = confirmedList.filter(n => n && n.toLowerCase() !== 'nicht im stadion').map(n => `<span class="name-tag tag-confirmed">${n}</span>`).join("");
-            let reqs = requests.filter(n => !confirmedList.includes(n)).map(n => `<span class="name-tag tag-request">? ${n}</span>`).join("");
-            actionHtml = `<div class="name-container">${tags}${reqs}</div>`;
+            return d;
         }
 
-        return `<tr class="${isFuture ? 'future-row' : ''}">
-            <td style="font-size:0.7rem">${m.datum}</td>
-            <td><span style="font-size:8px; padding:2px 4px; background:#334155; border-radius:3px;">${m.ort}</span></td>
-            <td style="text-align:right"><b>${m.ort=='H'?m.meinVerein:m.gegner}</b></td>
-            <td><div class="score-box">${m.played ? (m.ort=='H'?m.tK+':'+m.tG:m.tG+':'+m.tK) : '-:-'}</div></td>
-            <td style="text-align:left"><b>${m.ort=='A'?m.meinVerein:m.gegner}</b></td>
-            <td>${actionHtml}</td>
-        </tr>`;
-    }).join("");
+        function calculatePoints(m) {
+            let t = String(m.typ || "").toUpperCase().trim();
+            if (t === "S") return 3;
+            if (t === "U") return 1;
+            if (t === "N") return 0;
+            let e = String(m.ergebnis || "");
+            if (!e.includes(":")) return 0;
+            const res = e.split(":");
+            const k = parseInt(res[0]), g = parseInt(res[1]);
+            return isNaN(k) || isNaN(g) ? 0 : (k > g ? 3 : (k === g ? 1 : 0));
+        }
 
-    if(!filters.companion) {
-        const comps = {};
-        data.forEach(m => {
-            if(m.begleiter && m.begleiter.toLowerCase() !== "nicht im stadion") {
-                m.begleiter.split(/,| und /).forEach(n => {
-                    const name = n.trim(); if(!name) return;
-                    if(!comps[name]) comps[name] = {sp: 0, last: null};
-                    if(m.played) {
-                        comps[name].sp++; 
-                        if(!comps[name].last || m.fD > comps[name].last) comps[name].last = m.fD;
-                    }
+        function formatDuration(ms) {
+            if (ms < 0) return "---";
+            let s = Math.floor(ms / 1000);
+            let d = Math.floor(s / 86400); s %= 86400;
+            let h = Math.floor(s / 3600); s %= 3600;
+            let m = Math.floor(s / 60); s %= 60;
+            return (d > 0 ? d + "T " : "") + `${h}h ${m}m ${s}s`;
+        }
+
+        function importExcel(e) {
+            const f = e.target.files[0];
+            const r = new FileReader();
+            r.onload = ev => {
+                const wb = XLSX.read(ev.target.result, { type: "binary", raw: true });
+                const sheetS = wb.Sheets["Spiele"] || wb.Sheets[0];
+                const sRows = XLSX.utils.sheet_to_json(sheetS, { defval: "", raw: true });
+                matches = sRows.map(row => {
+                    const keys = Object.keys(row);
+                    const getV = (n) => {
+                        const k = keys.find(key => key.trim().toLowerCase() === n);
+                        return k ? row[k] : "";
+                    };
+                    let d = getV("datum"), u = getV("uhrzeit");
+                    return { 
+                        datum: (typeof d === "number" && typeof u === "number") ? d + u : d + " " + u, 
+                        gegner: getV("gegner"), 
+                        begleiter: getV("begleiter"),
+                        stadion: getV("stadion"),
+                        zuschauer: getV("zuschauer"),
+                        ergebnis: getV("ergebnis"),
+                        typ: getV("typ")
+                    };
+                }).filter(m => m.datum && String(m.datum).length > 2);
+                localStorage.setItem("kielMatches", JSON.stringify(matches));
+                renderAll();
+            };
+            r.readAsBinaryString(f);
+        }
+
+        function renderBegleiterStats() {
+            const heute = new Date();
+            const personData = {};
+            const duoData = {};
+            
+            matches.forEach(m => {
+                const dDate = parseDate(m.datum);
+                if (!dDate || dDate > heute) return;
+                
+                const zVal = parseFloat(String(m.zuschauer).replace(/[.,]/g, ""));
+                if (isNaN(zVal) || zVal <= 0) return;
+
+                const punkte = calculatePoints(m);
+                const namen = String(m.begleiter).split(/[,;]| und /).map(n => n.trim())
+                    .filter(n => n && !["ich", "nicht im stadion"].includes(n.toLowerCase()));
+                
+                namen.forEach(n => {
+                    if (!personData[n]) personData[n] = { visits: [], points: 0, stadiums: new Set() };
+                    personData[n].visits.push(dDate.getTime());
+                    personData[n].points += punkte;
+                    if (m.stadion) personData[n].stadiums.add(m.stadion.trim());
                 });
-            }
+
+                if (namen.length >= 2) {
+                    for (let i = 0; i < namen.length; i++) {
+                        for (let j = i + 1; j < namen.length; j++) {
+                            const pair = [namen[i], namen[j]].sort().join(" & ");
+                            duoData[pair] = (duoData[pair] || 0) + 1;
+                        }
+                    }
+                }
+            });
+
+let list = Object.keys(personData).map(n => {
+                const v = personData[n].visits.sort((a,b) => a - b);
+                const einJahrInMs = 365 * 24 * 60 * 60 * 1000;
+                // Zählt, wie viele Spiele die Person im letzten Jahr besucht hat
+                const aktivitaetLetztesJahr = v.filter(ts => (heute.getTime() - ts) < einJahrInMs).length;
+
+                return { 
+                    name: n, 
+                    count: v.length, 
+                    first: v[0], 
+                    last: v[v.length-1], 
+                    stadiumCount: personData[n].stadiums.size,
+                    schnitt: (heute.getTime() - v[0]) / v.length,
+                    pps: (personData[n].points / v.length).toFixed(2),
+                    recentCount: aktivitaetLetztesJahr
+                };
+            }).sort((a,b) => b.count - a.count || a.schnitt - b.schnitt);
+
+            if (list.length === 0) { $("#statsBegleiter").innerHTML = "Keine Daten."; return; }
+
+            // 1. GLÜCKSBRINGER
+            let html = `<h3>🍀 Glücksbringer-Faktor</h3>
+            <table><thead><tr><th>Pl.</th><th>Name</th><th>Spiele</th><th>Ø Punkte</th></tr></thead><tbody>`;
+            [...list].sort((a,b) => b.pps - a.pps).slice(0, 10).forEach((d, i) => {
+                html += `<tr><td>${i+1}</td><td style="font-weight:bold">${d.name}</td><td>${d.count}x</td><td style="font-weight:bold">${d.pps}</td></tr>`;
+            });
+            html += `</tbody></table>`;
+
+            // 2. STADION-VARIANZ
+            html += `<h3>🏟️ Groundhopping (Meiste Stadien)</h3>
+            <table><thead><tr><th>Pl.</th><th>Name</th><th>Stadien</th></tr></thead><tbody>`;
+            [...list].sort((a,b) => b.stadiumCount - a.stadiumCount).slice(0, 5).forEach((d, i) => {
+                html += `<tr><td>${i+1}</td><td style="font-weight:bold">${d.name}</td><td>${d.stadiumCount} Stadien</td></tr>`;
+            });
+            html += `</tbody></table>`;
+
+            // 3. FREQUENZ & AKTIVITÄT (Ersetzt die Prognose)
+            html += `<h3>⏳ Stadion-Frequenz & Aktivität</h3>
+            <table><thead><tr><th>Name</th><th>Gesamt</th><th>Ø Rhythmus</th><th>Letzte 12 Monate</th><th>Status</th></tr></thead><tbody>`;
+            
+            list.forEach(d => {
+                let status = "☕ Gelegenheitsgast";
+                let color = "#95a5a6";
+                
+                if (d.recentCount >= 10) { status = "👑 Stammgast"; color = "#f1c40f"; }
+                else if (d.recentCount >= 3) { status = "🏟️ Regelmäßig"; color = "#27ae60"; }
+                else if (d.recentCount > 0) { status = "✅ Aktiv"; color = "#2c3e50"; }
+
+                html += `<tr>
+                    <td style="font-weight:bold">${d.name}</td>
+                    <td>${d.count}x</td>
+                    <td style="color:#27ae60; font-family:monospace">alle ${formatDuration(d.schnitt)}</td>
+                    <td>${d.recentCount} Spiele</td>
+                    <td style="color:${color}; font-weight:bold; font-size:0.85rem">${status}</td>
+                </tr>`;
+            });
+            $("#statsBegleiter").innerHTML = html + "</tbody></table>";
+         $("#statsBegleiter").innerHTML = html + "</tbody></table>";
+        }
+
+        function renderSeason() {
+            const heute = new Date();
+            let html = `<table><thead><tr><th>Datum & Uhrzeit</th><th>Gegner</th><th>Ergebnis</th><th>Stadion</th><th>Begleiter</th></tr></thead><tbody>`;
+            matches.slice().sort((a,b) => parseDate(b.datum) - parseDate(a.datum)).forEach(m => {
+                const d = parseDate(m.datum);
+                html += `<tr><td style="font-family: monospace;">${d ? d.toLocaleString('de-DE') : "–"}</td><td>${m.gegner}</td><td style="font-weight:bold">${m.ergebnis || "–"}</td><td>${m.stadion || "–"}</td><td>${m.begleiter}</td></tr>`;
+            });
+            $("#tblSpiele").innerHTML = html + "</tbody></table>";
+        }
+
+        function renderAll() { renderSeason(); renderBegleiterStats(); }
+
+        document.querySelectorAll('.tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+                clearInterval(statsInterval);
+                if(btn.dataset.tab === 'tab3') { renderBegleiterStats(); statsInterval = setInterval(renderBegleiterStats, 1000); }
+            });
         });
-        document.getElementById("companionSelect").innerHTML = '<option value="">Name wählen...</option>' + 
-            Object.keys(comps).sort().map(n => `<option value="${n}">${n}</option>`).join("");
-        document.getElementById("companionTable").querySelector("tbody").innerHTML = Object.entries(comps)
-            .sort((a,b)=>b[1].sp - a[1].sp).map(([n, s]) => `
-            <tr><td style="padding:10px; text-align:left;"><b>${n}</b></td><td>${s.sp}x</td><td style="color:var(--red)">${s.last ? Math.floor((now-s.last)/86400000)+'T.' : '-'}</td></tr>`).join("");
-        document.getElementById("statCount").innerText = playedPast.length;
-    } else {
-        document.getElementById("statCount").innerText = userHistory.length;
-    }
-}
 
-async function submitZusage(datum) {
-    if(!filters.companion) return;
-    ZusagenCloud.push({ user: filters.companion, date: datum });
-    await fetch(DB_URL, { 
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify({ zusagen: ZusagenCloud }) 
-    });
-    alert("Anfrage für " + datum + " gesendet!"); 
-    refreshData();
-}
-
-async function clearCloud() {
-    if(confirm("Alle offenen Anfragen löschen?")) {
-        await fetch(DB_URL, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ zusagen: [] }) });
-        refreshData();
-    }
-}
-
-function copyLink() {
-    const name = document.getElementById("companionSelect").value;
-    if(!name) return alert("Bitte erst einen Namen auswählen!");
-    const url = window.location.origin + window.location.pathname + "?user=" + encodeURIComponent(name);
-    navigator.clipboard.writeText(url).then(() => alert("Link für " + name + " kopiert!"));
-}
-
-function logout() { window.location.href = window.location.pathname; }
-</script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const m = localStorage.getItem("kielMatches");
+            if(m) matches = JSON.parse(m);
+            renderAll();
+            $("#excelInput").addEventListener("change", importExcel);
+        });
+    </script>
 </body>
 </html>
