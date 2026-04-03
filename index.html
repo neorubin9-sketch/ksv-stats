@@ -27,7 +27,6 @@
   .msg-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 400px; padding-right: 10px; }
   .chat-tab { padding: 12px; border-radius: 12px; cursor: pointer; background: rgba(255,255,255,0.03); font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; }
   .chat-tab.active { background: var(--blue); border-color: #60a5fa; }
-  .unread-dot { width: 10px; height: 10px; background: var(--red); border-radius: 50%; box-shadow: 0 0 5px var(--red); }
   .msg-content { display: flex; flex-direction: column; background: rgba(15, 23, 42, 0.5); border-radius: 15px; padding: 15px; border: 1px solid var(--border); }
   .msg-list { flex: 1; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; }
   .msg-bubble { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 0.85rem; }
@@ -42,8 +41,8 @@
   .tag-request { background: var(--amber); color: #000; font-weight: 800; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; margin: 2px; display: inline-flex; align-items: center; gap: 5px; }
   
   .status-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
-  .online { background: var(--win); color: #000; }
-  .no-pw { background: var(--red); color: #fff; }
+  .online { background: var(--win); color: #000; animation: pulse 2s infinite; }
+  @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
   .ticker-card { background: var(--card); padding: 25px; border-radius: 20px; margin-bottom: 20px; border: 1px solid var(--border); text-align: center; }
   .ticker-val { font-size: 2.8rem; font-weight: 900; color: #fff; margin-bottom: 5px; }
@@ -58,7 +57,7 @@
 <div id="loginOverlay">
     <div class="login-box">
         <h2 id="loginTitle">KSV Dashboard</h2>
-        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Lade Daten...</p>
+        <p id="loginDesc" style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 20px;">Datenabgleich...</p>
         <input type="password" id="passInput" placeholder="Passwort...">
         <button class="btn-action" onclick="handleAuth()">LOGIN</button>
     </div>
@@ -68,7 +67,7 @@
   <div class="header">
     <div>
         <h2 id="viewTitle">KSV LIVE MANAGER</h2>
-        <div id="statusInfo" style="font-size: 0.7rem; color: var(--win);">● System bereit</div>
+        <div id="statusInfo" style="font-size: 0.7rem; color: var(--win);">● Echtzeit-Modus aktiv</div>
     </div>
     <button class="btn-action" style="width:auto; background:var(--red)" onclick="logout()">LOGOUT</button>
   </div>
@@ -95,7 +94,7 @@
     </div>
   </div>
 
-  <div class="ticker-card" id="tickerBox">
+  <div class="ticker-card">
     <div id="liveTicker" class="ticker-val">00t 00h 00m 00s</div>
     <div id="tickerLabel" style="color:var(--text-dim); font-size: 0.75rem; text-transform: uppercase;">Zeit seit dem letzten Stadionbesuch</div>
   </div>
@@ -104,7 +103,7 @@
     <div class="stat-mini"><span>Besuche</span><b id="statCount">-</b></div>
     <div class="stat-mini"><span>Anfragen</span><b id="statReqs" style="color:var(--amber)">0</b></div>
     <div class="stat-mini"><span>Zukünftig</span><b id="statTotal">-</b></div>
-    <div class="stat-mini"><span>ID</span><b id="statID" style="font-size:0.8rem">-</b></div>
+    <div class="stat-mini"><span>Letzter Sync</span><b id="statSync" style="font-size:0.8rem">Jetzt</b></div>
   </div>
 
   <div class="table-container">
@@ -124,9 +123,9 @@
         </table>
     </div>
     <div class="table-container">
-        <h3>🔑 USER-STATUS & VIEW</h3>
+        <h3>🔑 USER-STATUS & LIVE MONITOR</h3>
         <table id="userTable" style="width:100%; border-collapse:collapse; font-size: 0.8rem;">
-            <thead><tr style="color:var(--text-dim); text-align:left;"><th>NAME</th><th>STATUS / AKTIVITÄT</th><th>AKTION</th></tr></thead>
+            <thead><tr style="color:var(--text-dim); text-align:left;"><th>NAME</th><th>AKTIVITÄT</th><th>AKTION</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
@@ -151,6 +150,19 @@ window.onload = async () => {
         document.getElementById("loginTitle").innerText = "Moin, " + filters.companion;
         if(params.get('mode') === 'view') { showApp(false); }
     }
+    // Auto-Refresh für Admin (alle 30 Sek)
+    setInterval(async () => {
+        if(isAdminMode) {
+            await refreshData();
+            render();
+            renderMessages();
+            document.getElementById("statSync").innerText = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+        } else if(filters.companion) {
+            // Begleiter pingen nur kurz ihren Status hoch
+            CloudDB.lastSeen[filters.companion] = Date.now();
+            await saveToCloud();
+        }
+    }, 30000);
 };
 
 async function hash(str) {
@@ -263,29 +275,22 @@ function render() {
     if(isAdminMode) {
         const sortedComps = Object.entries(comps).sort((a,b) => b[1] - a[1]);
         document.getElementById("companionTable").querySelector("tbody").innerHTML = sortedComps.map(([n, s]) => `<tr><td>${n}</td><td style="text-align:center">${s}x</td></tr>`).join("");
-        
         const allNames = Object.keys(comps).sort();
         document.getElementById("companionSelect").innerHTML = allNames.map(n => `<option value="${n}">${n}</option>`).join("");
-        
         document.getElementById("userTable").querySelector("tbody").innerHTML = allNames.map(u => {
             const id = Object.keys(CloudDB.userIds).find(k => CloudDB.userIds[k] === u);
             const lastTime = CloudDB.lastSeen[u];
-            let status = '<span class="status-badge no-pw">Noch kein Passwort vergeben</span>';
-
+            let status = '<span class="status-badge no-pw">Kein Passwort</span>';
             if(CloudDB.users[u] && lastTime) {
                 const diff = (now - lastTime) / 1000;
-                if(diff < 300) { 
-                    status = '<span class="status-badge online">ONLINE</span>'; 
-                } else { 
+                if(diff < 90) { status = '<span class="status-badge online">ONLINE</span>'; }
+                else { 
                     const d = new Date(lastTime);
-                    const dateStr = d.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit'});
-                    const timeStr = d.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'});
-                    status = `<span style="font-size:0.75rem; color:var(--text-dim)">Zuletzt online am ${dateStr}. um ${timeStr} Uhr</span>`;
+                    status = `<span style="font-size:0.75rem; color:var(--text-dim)">Zuletzt online: ${d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'})}. ${d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})}</span>`;
                 }
             }
-
             const viewBtn = id ? `<button class="btn-view" onclick="switchToUser('${id}')">VIEW</button>` : '';
-            return `<tr><td><b>${u}</b></td><td>${status}</td><td>${viewBtn}<button onclick="resetUser('${u}')" style="background:var(--red); color:white; border:none; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td></tr>`;
+            return `<tr><td><b>${u}</b></td><td>${status}</td><td>${viewBtn}<button onclick="resetUser('${u}')" style="background:var(--red); border:none; color:white; padding:2px 5px; border-radius:4px; font-size:10px; cursor:pointer;">RESET</button></td></tr>`;
         }).join("");
     }
 
@@ -295,7 +300,6 @@ function render() {
         const manual = CloudDB.confirmedManual[m.datum] || [];
         const confirmed = [...new Set([...m.begleiter.split(/,| und /).map(n => n.trim()), ...manual])].filter(n => n && n !== "nicht im stadion");
         if(filters.companion && !isFuture && !confirmed.includes(filters.companion)) return "";
-        
         let statusHtml = "";
         if(isFuture) {
             const requests = CloudDB.zusagen.filter(z => z.date === m.datum).map(z => z.user);
@@ -325,7 +329,6 @@ function render() {
     document.getElementById("statCount").innerText = isAdminMode ? data.filter(m => m.played).length : userHistory.length;
     document.getElementById("statTotal").innerText = data.filter(m => !m.played && m.fD > now).length;
     document.getElementById("statReqs").innerText = CloudDB.zusagen.length;
-    document.getElementById("statID").innerText = filters.companion ? (Object.keys(CloudDB.userIds).find(k => CloudDB.userIds[k] === filters.companion) || "-") : "ADMIN";
 }
 
 function confirmedCheck(m, user) {
